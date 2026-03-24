@@ -1,3 +1,12 @@
+isaac-ros-cli (2.2.0-1) noble; urgency=low
+
+  * Support SIPL and Eagle CoE camera workflows.
+  * Update ZED support to SDK v5.2.
+  * Align TensorRT pinning with JetPack 7.1.
+  * Fix `run_dev` compatibility with newer `nvidia-container-toolkit`.
+
+ -- Isaac ROS Maintainers <isaac-ros-maintainers@nvidia.com>  Thu, 19 Mar 2026 12:00:00 +0000
+
 isaac-ros-cli (2.1.1-1) noble; urgency=high
 
   * Fix `tensordict` pip shim constraint.

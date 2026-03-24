@@ -9,6 +9,7 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
 import os
+import glob
 import sys
 import subprocess
 import shlex
@@ -242,11 +243,16 @@ def get_docker_args(platform):
             "-v /tmp/:/tmp/",
             "-v /usr/lib/aarch64-linux-gnu/tegra:/usr/lib/aarch64-linux-gnu/tegra",
             "-v /usr/src/jetson_multimedia_api:/usr/src/jetson_multimedia_api",
+            "-v /usr/src/jetson_sipl_api:/usr/src/jetson_sipl_api",
             "--pid=host",
             "-v /usr/share/vpi3:/usr/share/vpi3",
             "-v /dev/input:/dev/input",
             "-v /dev/bus/usb:/dev/bus/usb",
         ])
+        # CoE (Camera over Ethernet) device nodes
+        for coe_dev in glob.glob("/dev/coe-chan-*"):
+            docker_args.append(f"--device={coe_dev}")
+
         try:
             output = subprocess.check_output(
                 ["getent", "group", "jtop"], text=True
@@ -353,7 +359,7 @@ def run_docker_container(args, container_name, base_name, isaac_dir):
         f"-v {shlex.quote(isaac_dir)}:/workspaces/isaac_ros-dev",
         "-v /etc/localtime:/etc/localtime:ro",
         f"--name {shlex.quote(container_name)}",
-        "--runtime nvidia",
+        "--gpus all",
         "--entrypoint /usr/local/bin/scripts/workspace-entrypoint.sh",
         shlex.quote(base_name),
         "/bin/bash"

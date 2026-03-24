@@ -3770,6 +3770,11 @@ isaac_ros_examples:
     focal: [ros-humble-isaac-ros-examples]
     jammy: [ros-humble-isaac-ros-examples]
     noble: [ros-jazzy-isaac-ros-examples]
+isaac_ros_fii:
+  ubuntu:
+    focal: [ros-humble-isaac-ros-fii]
+    jammy: [ros-humble-isaac-ros-fii]
+    noble: [ros-jazzy-isaac-ros-fii]
 isaac_ros_foundationpose:
   ubuntu:
     focal: [ros-humble-isaac-ros-foundationpose]
@@ -4282,6 +4287,9 @@ isaac_ros_segway_rmp:
     focal: [ros-humble-isaac-ros-segway-rmp]
     jammy: [ros-humble-isaac-ros-segway-rmp]
     noble: [ros-jazzy-isaac-ros-segway-rmp]
+isaac_ros_sipl_camera:
+  ubuntu:
+    noble: [ros-jazzy-isaac-ros-sipl-camera]
 isaac_ros_stereo_image_proc:
   ubuntu:
     focal: [ros-humble-isaac-ros-stereo-image-proc]
@@ -9860,6 +9868,16 @@ schunk_svh_tests:
     focal: [ros-humble-schunk-svh-tests]
     jammy: [ros-humble-schunk-svh-tests]
     noble: [ros-jazzy-schunk-svh-tests]
+onrobot_screwdriver_driver:
+  ubuntu:
+    focal: [ros-humble-onrobot-screwdriver-driver]
+    jammy: [ros-humble-onrobot-screwdriver-driver]
+    noble: [ros-jazzy-onrobot-screwdriver-driver]
+onrobot_screwdriver_driver_interfaces:
+  ubuntu:
+    focal: [ros-humble-onrobot-screwdriver-driver-interfaces]
+    jammy: [ros-humble-onrobot-screwdriver-driver-interfaces]
+    noble: [ros-jazzy-onrobot-screwdriver-driver-interfaces]
 sdformat_test_files:
   ubuntu:
     focal: [ros-humble-sdformat-test-files]

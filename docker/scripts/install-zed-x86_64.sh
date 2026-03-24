@@ -3,12 +3,12 @@
 # Extract ubuntu release year from /etc/lsb-release
 # Expects "/etc/lsb-release" to contain a line similar to "DISTRIB_RELEASE=20.04"
 export UBUNTU_RELEASE_YEAR="$(grep -o -P 'DISTRIB_RELEASE=.{0,2}' /etc/lsb-release | cut -d= -f2)"
-export ZED_SDK_MAJOR=5 ZED_SDK_MINOR=1
+export ZED_SDK_MAJOR=5 ZED_SDK_MINOR=2
 
 # Extract cuda major and minor version from nvcc --version
 # Expects "nvcc --version" to contain a line similar to "release 11.8"
-export CUDA_MAJOR="$(nvcc --version | grep -o -P ' release .{0,4}' | cut -d. -f1 | cut -d ' ' -f3)"
-export CUDA_MINOR="$(nvcc --version | grep -o -P ' release .{0,4}' | cut -d. -f2)"
+export CUDA_MAJOR="13"
+export CUDA_MINOR="0"
 
 
 # Download dependencies for zed SDK installation RUN file

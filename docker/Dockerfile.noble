@@ -421,20 +421,6 @@ apt-get update && apt-get install -y \
         udev \
         can-utils
 
-# Copy scripts
-RUN mkdir -p /usr/local/bin/scripts
-COPY scripts/*entrypoint.sh /usr/local/bin/scripts/
-RUN chmod +x /usr/local/bin/scripts/*.sh || true
-
-# Copy script additions
-RUN mkdir -p /usr/local/bin/scripts/entrypoint_additions
-COPY scripts/entrypoint_addition[s]/*.sh /usr/local/bin/scripts/entrypoint_additions/
-RUN chmod +x /usr/local/bin/scripts/entrypoint_additions/*.sh || true
-
-# Copy middleware profiles
-RUN mkdir -p /usr/local/share/middleware_profiles
-COPY middleware_profile[s]/*profile.xml /usr/local/share/middleware_profiles/
-
 # Store list of packages (must be last)
 RUN mkdir -p /opt/nvidia/isaac_ros_dev_base && dpkg-query -W | sort > /opt/nvidia/isaac_ros_dev_base/base-end-packages.csv
 

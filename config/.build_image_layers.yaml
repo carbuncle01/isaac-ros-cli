@@ -6,4 +6,4 @@ context_overrides:
 cache_to_registry_names: []
 cache_from_registry_names:
   - nvcr.io/nvidia/isaac/ros
-remote_builder: []
+remote_builder: {}

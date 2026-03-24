@@ -31,23 +31,83 @@ RUN chmod +x /opt/zed/install-zed-x86_64.sh /opt/zed/install-zed-aarch64.sh && \
 # ------------------------------------------------------------------------------
 # Install zed-ros2-wrapper into a workspace and build it
 # Expects:
-#   - ROS 2 Jazzy already installed in the base image with ${ROS_ROOT} set
-#   - rosdep initialized (as in our ros2_jazzy base)
+#   - ROS 2 Jazzy already installed in the base image at /opt/ros/${ROS_DISTRO}
+#   - rosdep initialized (as in our isaac_ros base)
 # -------------------------------------------------------------------------------
+ARG ROS_DISTRO=jazzy
+ENV ROS_DISTRO=${ROS_DISTRO}
+ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
+
 ARG ISAAC_ROS_WS=/opt/ros_ws
 ENV ISAAC_ROS_WS=${ISAAC_ROS_WS}
 
 # Clone zed-ros2-wrapper (with submodules)
 RUN --mount=type=cache,sharing=locked,target=/var/cache/apt --mount=type=cache,sharing=locked,target=/var/lib/apt/lists \
     mkdir -p ${ISAAC_ROS_WS}/src && cd ${ISAAC_ROS_WS}/src \
-    && git clone --recurse-submodules https://github.com/stereolabs/zed-ros2-wrapper
+    && git clone --recurse-submodules https://github.com/stereolabs/zed-ros2-wrapper -b v5.2.0
+
+# Disable ZED SDK AI features by default in zed-ros2-wrapper config.
+# We install the ZED SDK with `skip_od_module`, so Neural Depth / Object Detection / Body Tracking
+# must not be requested at runtime (avoids TensorRT dependency and SDK "corrupted installation" errors).
+RUN python3 - <<'PY'
+from __future__ import annotations
+
+from pathlib import Path
+
+cfg_dir = Path("/opt/ros_ws/src/zed-ros2-wrapper/zed_wrapper/config")
+if not cfg_dir.is_dir():
+    raise SystemExit(f"Expected config directory not found: {cfg_dir}")
+
+def patch_text(text: str) -> str:
+    # SDK5-style config (strings)
+    text = text.replace("depth_mode: 'NEURAL_LIGHT'", "depth_mode: 'NONE'")
+    text = text.replace("depth_mode: 'NEURAL'", "depth_mode: 'NONE'")
+    text = text.replace("depth_mode: 'NEURAL_PLUS'", "depth_mode: 'NONE'")
+    # Older-style config (numeric quality: 0 == NONE)
+    text = text.replace("quality: 1", "quality: 0")
+    text = text.replace("quality: 2", "quality: 0")
+    text = text.replace("quality: 3", "quality: 0")
+    # Explicitly disable detection/tracking toggles if present
+    text = text.replace("od_enabled: true", "od_enabled: false")
+    text = text.replace("bt_enabled: true", "bt_enabled: false")
+    return text
+
+patched_any = False
+for path in sorted(cfg_dir.glob("common*.yaml")):
+    original = path.read_text(encoding="utf-8")
+    patched = patch_text(original)
+    if patched != original:
+        path.write_text(patched, encoding="utf-8")
+        patched_any = True
+
+if not patched_any:
+    raise SystemExit(
+        f"No common*.yaml files were modified under {cfg_dir}. "
+        "Wrapper config format may have changed."
+    )
+PY
 
 # Install dependencies and build only up to zed_wrapper
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     cd ${ISAAC_ROS_WS} \
     && apt-get update \
-    && source ${ROS_ROOT}/setup.bash \
+    && if [[ -f "${ROS_ROOT}/setup.bash" ]]; then source "${ROS_ROOT}/setup.bash"; else echo "Missing ROS setup: ${ROS_ROOT}/setup.bash" && exit 1; fi \
     && rosdep update \
+    # zed-ros2-wrapper's build expects CUDA toolchain to be available.
+    # Install CUDA via rosdep (matches isaac_ros_zed's `cuda-toolkit` dependency).
+    && mkdir -p /tmp/isaac_ros_zed_deps \
+    && printf '%s\n' \
+        '<?xml version="1.0"?>' \
+        '<package format="3">' \
+        '  <name>isaac_ros_zed_deps</name>' \
+        '  <version>0.0.0</version>' \
+        '  <description>Dependency shim for ZED image build</description>' \
+        '  <maintainer email="isaac-ros-maintainers@nvidia.com">Isaac ROS Maintainers</maintainer>' \
+        '  <license>Apache-2.0</license>' \
+        '  <depend>cuda-toolkit</depend>' \
+        '</package>' \
+      > /tmp/isaac_ros_zed_deps/package.xml \
+    && rosdep install --from-paths /tmp/isaac_ros_zed_deps --ignore-src -r -y \
     && rosdep install --from-paths src/zed-ros2-wrapper --ignore-src -r -y \
     && colcon build --symlink-install --packages-up-to zed_wrapper \
     && echo "source ${ISAAC_ROS_WS}/install/setup.bash" | tee --append /etc/bash.bashrc
