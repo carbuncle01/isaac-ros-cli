@@ -47,7 +47,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && curl -fsSL https://isaac.download.nvidia.com/isaac-ros/repos.key | gpg --dearmor | tee -a $k > /dev/null \
     && f="/etc/apt/sources.list.d/nvidia-isaac-ros.list" \
     && touch $f \
-    && s="deb [signed-by=$k] https://isaac.download.nvidia.com/isaac-ros/release-4.3 $(lsb_release -cs)${ISAAC_DEBIAN_DISTRO_SUFFIX} ${ISAAC_DEBIAN_COMPONENTS}" \
+    && s="deb [signed-by=$k] https://isaac.download.nvidia.com/isaac-ros/release-4.4 $(lsb_release -cs)${ISAAC_DEBIAN_DISTRO_SUFFIX} ${ISAAC_DEBIAN_COMPONENTS}" \
     && (grep -qxF "$s" $f || echo "$s" | tee -a $f) \
     && apt-get update
 

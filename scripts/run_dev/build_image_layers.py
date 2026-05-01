@@ -217,6 +217,7 @@ class Config:
         # Define potential config file locations
         config_locations = [
             os.path.expandvars("$ISAAC_ROS_WS/../scripts/.isaac_ros_common-config"),
+            os.path.expandvars("$ISAAC_ROS_WS/scripts/.isaac_ros_common-config"),
             # scripts/isaac-ros-cli/config/
             os.path.join(current_dir, '..', '..', '..',
                          '.isaac_ros_common-config'),

@@ -17,7 +17,6 @@
 # Pin DGX Spark packages to the Isaac debian repository so they are always
 # sourced from Isaac builds rather than any other configured apt repository
 # (e.g. JetPack / L4T feeds).
-#
 Package: deepstream-tegra vpi-dev libnvvpi4
 Pin: origin isaac.download.nvidia.com
 Pin-Priority: 1001
