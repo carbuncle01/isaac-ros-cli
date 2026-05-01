@@ -1,3 +1,10 @@
+isaac-ros-cli (2.3.0-1) noble; urgency=low
+
+  * Refresh pip shim constraints, including PyYAML, SciPy, and tensordict.
+  * Add new rosdep mappings for Isaac ROS 4.4 packages.
+
+ -- Isaac ROS Maintainers <isaac-ros-maintainers@nvidia.com>  Thu, 30 Apr 2026 12:00:00 +0000
+
 isaac-ros-cli (2.2.0-1) noble; urgency=low
 
   * Support SIPL and Eagle CoE camera workflows.
