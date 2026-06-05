@@ -1,0 +1,78 @@
+#!/bin/bash
+#
+# Copyright (c) 2021-2024, NVIDIA CORPORATION.  All rights reserved.
+
+set -e
+
+USER_NAME="admin"
+USER_HOME="/home/${USER_NAME}"
+
+HOST_USER_UID="${HOST_USER_UID:=1000}"
+HOST_USER_GID="${HOST_USER_GID:=1000}"
+
+print_info() {
+    echo "workspace-entrypoint: $1"
+}
+
+# 1. multicastを有効化
+/usr/sbin/ip link set lo multicast on
+
+# 2. sysctlの値を直接書き込む 
+sysctl -w net.core.rmem_max=2147483647
+sysctl -w net.ipv4.ipfrag_time=3
+sysctl -w net.ipv4.ipfrag_high_thresh=134217728
+
+print_info "Custom network settings applied."
+
+export HOME=${USER_HOME}
+chown -R ${HOST_USER_UID}:${HOST_USER_GID} ${USER_HOME}
+
+# ------------------------------------------------------------
+# 3. joy_node: ジョイスティック
+# ------------------------------------------------------------
+if [ -e /dev/input/js0 ]; then
+    HOST_INPUT_GID=$(stat -c '%g' /dev/input/js0)
+    print_info "Detected input device GID: ${HOST_INPUT_GID}"
+else
+    HOST_INPUT_GID=101
+fi
+EXISTING_GROUP=$(getent group ${HOST_INPUT_GID} | cut -d: -f1)
+if [ -n "${EXISTING_GROUP}" ]; then
+    usermod -aG ${EXISTING_GROUP} ${USER_NAME}
+else
+    groupadd -g ${HOST_INPUT_GID} input_host
+    usermod -aG input_host ${USER_NAME}
+fi
+
+# ------------------------------------------------------------
+# 4. jetracer_node: GPIO
+# ------------------------------------------------------------
+if [ -c /dev/gpiochip0 ]; then
+    HOST_GPIO_GID=999 
+    EXISTING_GPIO_GROUP=$(getent group ${HOST_GPIO_GID} | cut -d: -f1)
+    if [ -n "${EXISTING_GPIO_GROUP}" ]; then
+        usermod -aG ${EXISTING_GPIO_GROUP} ${USER_NAME}
+    else
+        groupadd -g ${HOST_GPIO_GID} gpio
+        usermod -aG gpio ${USER_NAME}
+    fi
+fi
+
+# ------------------------------------------------------------
+# 5. jetracer_node: I2C
+# ------------------------------------------------------------
+if [ -c /dev/i2c-7 ]; then
+    HOST_I2C_GID=$(stat -c '%g' /dev/i2c-7)
+    EXISTING_I2C_GROUP=$(getent group ${HOST_I2C_GID} | cut -d: -f1)
+    if [ -n "${EXISTING_I2C_GROUP}" ]; then
+        usermod -aG ${EXISTING_I2C_GROUP} ${USER_NAME}
+    else
+        groupadd -g ${HOST_I2C_GID} i2c_host
+        usermod -aG i2c_host ${USER_NAME}
+    fi
+fi
+
+export ROS_DOMAIN_ID="${ROS_DOMAIN_ID:=0}"
+print_info "Using ROS_DOMAIN_ID=${ROS_DOMAIN_ID}"
+
+exec gosu ${USER_NAME} "$@"
