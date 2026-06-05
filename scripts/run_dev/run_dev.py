@@ -208,6 +208,40 @@ def get_existing_bash_configs():
     return existing_configs
 
 
+def append_existing_device(docker_args, device_path):
+    """Append an explicit Docker device argument when the host device exists."""
+    if os.path.exists(device_path):
+        docker_args.append(f"--device={device_path}")
+
+
+def append_existing_devices(docker_args, device_patterns):
+    """Append explicit Docker device arguments for all matching host devices."""
+    for pattern in device_patterns:
+        for device_path in sorted(glob.glob(pattern)):
+            append_existing_device(docker_args, device_path)
+
+
+def get_workspace_mount_args(isaac_dir):
+    """Mount Isaac ROS sibling directories used by legacy run_dev.sh workflows."""
+    isaac_parent_dir = os.path.dirname(os.path.abspath(isaac_dir))
+    sibling_mounts = {
+        "scripts": "/scripts",
+        "debug": "/debug",
+        "python_ws": "/python_ws",
+        "record": "/record",
+        "map": "/map",
+    }
+
+    docker_args = []
+    for host_name, container_path in sibling_mounts.items():
+        host_path = os.path.join(isaac_parent_dir, host_name)
+        if not os.path.isdir(host_path):
+            os.makedirs(host_path, exist_ok=True)
+            print(f"Created missing workspace support directory at {host_path}")
+        docker_args.append(f"-v {shlex.quote(host_path)}:{container_path}")
+    return docker_args
+
+
 def get_docker_args(platform):
     # Return arguments as complete flag-value pairs for shell=True usage
     home_path = os.path.expanduser('~')
@@ -230,6 +264,10 @@ def get_docker_args(platform):
         f"-e HOST_USER_UID={os.getuid()}",
         f"-e HOST_USER_GID={os.getgid()}",
     ])
+    if os.path.isdir("/var/run/dbus"):
+        docker_args.append("-v /var/run/dbus:/var/run/dbus")
+    append_existing_device(docker_args, "/dev/rfkill")
+
     if platform == "aarch64":
         if "SSH_AUTH_SOCK" in os.environ:
             ssh_auth_sock = os.environ['SSH_AUTH_SOCK']
@@ -249,6 +287,15 @@ def get_docker_args(platform):
             "-v /dev/input:/dev/input",
             "-v /dev/bus/usb:/dev/bus/usb",
         ])
+        append_existing_devices(
+            docker_args,
+            [
+                "/dev/gpiochip*",
+                "/dev/i2c-*",
+                "/dev/input/js*",
+                "/dev/input/event*",
+            ]
+        )
         # CoE (Camera over Ethernet) device nodes
         for coe_dev in glob.glob("/dev/coe-chan-*"):
             docker_args.append(f"--device={coe_dev}")
@@ -328,6 +375,7 @@ def load_docker_args_from_file():
 
 def run_docker_container(args, container_name, base_name, isaac_dir):
     docker_args = get_docker_args(args.platform)
+    docker_args.extend(get_workspace_mount_args(isaac_dir))
     file_args = load_docker_args_from_file()
 
     docker_args.extend(file_args)

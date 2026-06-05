@@ -1,0 +1,280 @@
+# Additional Isaac ROS development settings.
+ARG BASE_IMAGE=ubuntu:24.04
+FROM ${BASE_IMAGE}
+
+USER root
+SHELL ["/bin/bash", "-c"]
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 1. CycloneDDS settings.
+COPY middleware_profiles/cyclonedds.xml /etc/cyclonedds.xml
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+ENV CYCLONEDDS_URI=file:///etc/cyclonedds.xml
+ENV ROS_DOMAIN_ID=50
+
+# 2. Admin user settings.
+# The current Isaac ROS entrypoint creates/updates this user at container start
+# so it can match the host UID/GID. Avoid creating it at build time.
+ARG USERNAME=admin
+ENV USERNAME=${USERNAME}
+
+# 3. Workspace.
+WORKDIR /workspaces
+
+# 4. JetRacer support.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y \
+        ca-certificates \
+        curl \
+        git \
+        gnupg \
+        lsb-release \
+        python3-pip \
+        python3-setuptools \
+        sudo \
+        gosu \
+        udev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure the Isaac ROS 4.4 Jazzy apt repository is available for the package listing below.
+ARG ISAAC_DEBIAN_COMPONENTS="main external-main"
+ARG ISAAC_DEBIAN_DISTRO_SUFFIX=""
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    k="/usr/share/keyrings/nvidia-isaac-ros.gpg" \
+    && curl -fsSL https://isaac.download.nvidia.com/isaac-ros/repos.key | gpg --dearmor | tee "$k" > /dev/null \
+    && f="/etc/apt/sources.list.d/nvidia-isaac-ros.list" \
+    && s="deb [signed-by=$k] https://isaac.download.nvidia.com/isaac-ros/release-4.4 $(lsb_release -cs)${ISAAC_DEBIAN_DISTRO_SUFFIX} ${ISAAC_DEBIAN_COMPONENTS}" \
+    && echo "$s" | tee "$f" > /dev/null \
+    && apt-get update \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN set -eux; \
+    cd /tmp; \
+    git clone --depth 1 https://github.com/NVIDIA-AI-IOT/jetracer.git; \
+    cd jetracer; \
+    python3 setup.py install; \
+    python3 -m pip install --break-system-packages \
+        traitlets \
+        questionary \
+        jetson-gpio; \
+    cd /; \
+    rm -rf /tmp/jetracer
+
+# 5. Extra Python packages are intentionally left for a future layer.
+
+# 6. Entrypoint additions.
+RUN mkdir -p /usr/local/bin/scripts/entrypoint_additions
+COPY scripts/entrypoint_additions/*.sh /usr/local/bin/scripts/entrypoint_additions/
+RUN chmod +x /usr/local/bin/scripts/entrypoint_additions/*.sh || true
+
+# 7. Isaac ROS packages for ROS 2 Jazzy / Ubuntu noble.
+# Optional/offline packages from the Jazzy listing are kept here but not installed
+# for a Jetson online/runtime image.
+#        ros-jazzy-isaac-ros-agile-unitree-g1
+#        ros-jazzy-isaac-ros-apriltag-benchmark
+#        ros-jazzy-isaac-ros-benchmark
+#        ros-jazzy-isaac-ros-centerpose-benchmark
+#        ros-jazzy-isaac-ros-cloud-control-interface
+#        ros-jazzy-isaac-ros-cumotion-examples
+#        ros-jazzy-isaac-ros-data-recorder
+#        ros-jazzy-isaac-ros-data-replayer
+#        ros-jazzy-isaac-ros-deploy-bringup
+#        ros-jazzy-isaac-ros-detectnet-benchmark
+#        ros-jazzy-isaac-ros-dnn-image-encoder-benchmark
+#        ros-jazzy-isaac-ros-dope-benchmark
+#        ros-jazzy-isaac-ros-ess-benchmark
+#        ros-jazzy-isaac-ros-ess-models-install
+#        ros-jazzy-isaac-ros-examples
+#        ros-jazzy-isaac-ros-foundationpose-benchmark
+#        ros-jazzy-isaac-ros-foundationpose-models-install
+#        ros-jazzy-isaac-ros-foundationstereo-benchmark
+#        ros-jazzy-isaac-ros-foundationstereo-models-install
+#        ros-jazzy-isaac-ros-franka-cumotion-benchmark
+#        ros-jazzy-isaac-ros-franka-ompl-benchmark
+#        ros-jazzy-isaac-ros-grounding-dino-benchmark
+#        ros-jazzy-isaac-ros-grounding-dino-models-install
+#        ros-jazzy-isaac-ros-h264-decoder-benchmark
+#        ros-jazzy-isaac-ros-h264-encoder-benchmark
+#        ros-jazzy-isaac-ros-image-proc-benchmark
+#        ros-jazzy-isaac-ros-manipulation-asset-bringup
+#        ros-jazzy-isaac-ros-manipulation-gear-assembly
+#        ros-jazzy-isaac-ros-manipulation-isaac-sim-utils
+#        ros-jazzy-isaac-ros-manipulation-object-following
+#        ros-jazzy-isaac-ros-manipulation-orchestration
+#        ros-jazzy-isaac-ros-manipulation-pick-and-place
+#        ros-jazzy-isaac-ros-manipulation-pose-to-pose
+#        ros-jazzy-isaac-ros-manipulation-test-utils
+#        ros-jazzy-isaac-ros-manipulation-ur-dnn-policy
+#        ros-jazzy-isaac-ros-moveit-benchmark
+#        ros-jazzy-isaac-ros-nitros-bridge-benchmark
+#        ros-jazzy-isaac-ros-nvblox-benchmark
+#        ros-jazzy-isaac-ros-occupancy-grid-localizer-benchmark
+#        ros-jazzy-isaac-ros-peoplenet-models-install
+#        ros-jazzy-isaac-ros-peoplesemseg-models-install
+#        ros-jazzy-isaac-ros-pynitros-benchmark
+#        ros-jazzy-isaac-ros-r2b-galileo
+#        ros-jazzy-isaac-ros-rtdetr-benchmark
+#        ros-jazzy-isaac-ros-rtdetr-models-install
+#        ros-jazzy-isaac-ros-scene-recorder
+#        ros-jazzy-isaac-ros-scene-recorder-interface
+#        ros-jazzy-isaac-ros-segformer-benchmark
+#        ros-jazzy-isaac-ros-segment-anything-benchmark
+#        ros-jazzy-isaac-ros-segment-anything2-benchmark
+#        ros-jazzy-isaac-ros-stereo-image-proc-benchmark
+#        ros-jazzy-isaac-ros-tensor-inspector
+#        ros-jazzy-isaac-ros-tensor-rt-benchmark
+#        ros-jazzy-isaac-ros-test
+#        ros-jazzy-isaac-ros-test-cmake
+#        ros-jazzy-isaac-ros-triton-benchmark
+#        ros-jazzy-isaac-ros-unet-benchmark
+#        ros-jazzy-isaac-ros-unitree-g1-teleop-bringup
+#        ros-jazzy-isaac-ros-ur5-cumotion-benchmark
+#        ros-jazzy-isaac-ros-ur5-ompl-benchmark
+#        ros-jazzy-isaac-ros-visual-slam-benchmark
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y \
+        ros-jazzy-isaac-common \
+        ros-jazzy-isaac-mapping-ros \
+        ros-jazzy-isaac-ros-apriltag \
+        ros-jazzy-isaac-ros-apriltag-interfaces \
+        ros-jazzy-isaac-ros-centerpose \
+        ros-jazzy-isaac-ros-common \
+        ros-jazzy-isaac-ros-cumotion \
+        ros-jazzy-isaac-ros-cumotion-controllers \
+        ros-jazzy-isaac-ros-cumotion-interfaces \
+        ros-jazzy-isaac-ros-cumotion-moveit \
+        ros-jazzy-isaac-ros-cumotion-object-attachment \
+        ros-jazzy-isaac-ros-cumotion-robot-description \
+        ros-jazzy-isaac-ros-cumotion-robot-segmenter \
+        ros-jazzy-isaac-ros-deploy \
+        ros-jazzy-isaac-ros-deploy-converters \
+        ros-jazzy-isaac-ros-deploy-interfaces \
+        ros-jazzy-isaac-ros-deploy-ros2-control \
+        ros-jazzy-isaac-ros-depth-image-proc \
+        ros-jazzy-isaac-ros-detectnet \
+        ros-jazzy-isaac-ros-dnn-image-encoder \
+        ros-jazzy-isaac-ros-dope \
+        ros-jazzy-isaac-ros-ess \
+        ros-jazzy-isaac-ros-foundationpose \
+        ros-jazzy-isaac-ros-foundationstereo \
+        ros-jazzy-isaac-ros-grounding-dino \
+        ros-jazzy-isaac-ros-grounding-dino-interfaces \
+        ros-jazzy-isaac-ros-gxf \
+        ros-jazzy-isaac-ros-h264-decoder \
+        ros-jazzy-isaac-ros-h264-encoder \
+        ros-jazzy-isaac-ros-image-pipeline \
+        ros-jazzy-isaac-ros-image-proc \
+        ros-jazzy-isaac-ros-jetson-stats \
+        ros-jazzy-isaac-ros-jetson-stats-services \
+        ros-jazzy-isaac-ros-json-info-generator \
+        ros-jazzy-isaac-ros-launch-utils \
+        ros-jazzy-isaac-ros-managed-nitros \
+        ros-jazzy-isaac-ros-manipulation-bringup \
+        ros-jazzy-isaac-ros-manipulation-interfaces \
+        ros-jazzy-isaac-ros-manipulation-robot-description \
+        ros-jazzy-isaac-ros-manipulation-ros-python-utils \
+        ros-jazzy-isaac-ros-manipulation-servers \
+        ros-jazzy-isaac-ros-mega-controller \
+        ros-jazzy-isaac-ros-mega-node-monitor \
+        ros-jazzy-isaac-ros-mission-client \
+        ros-jazzy-isaac-ros-mqtt-bridge \
+        ros-jazzy-isaac-ros-multicamera-vo \
+        ros-jazzy-isaac-ros-nitros \
+        ros-jazzy-isaac-ros-nitros-battery-state-type \
+        ros-jazzy-isaac-ros-nitros-bridge-interfaces \
+        ros-jazzy-isaac-ros-nitros-bridge-ros2 \
+        ros-jazzy-isaac-ros-nitros-camera-info-type \
+        ros-jazzy-isaac-ros-nitros-compressed-image-type \
+        ros-jazzy-isaac-ros-nitros-compressed-video-type \
+        ros-jazzy-isaac-ros-nitros-correlated-timestamp-type \
+        ros-jazzy-isaac-ros-nitros-detection2-d-array-type \
+        ros-jazzy-isaac-ros-nitros-detection3-d-array-type \
+        ros-jazzy-isaac-ros-nitros-disparity-image-type \
+        ros-jazzy-isaac-ros-nitros-encoder-ticks-type \
+        ros-jazzy-isaac-ros-nitros-flat-scan-type \
+        ros-jazzy-isaac-ros-nitros-image-type \
+        ros-jazzy-isaac-ros-nitros-imu-type \
+        ros-jazzy-isaac-ros-nitros-occupancy-grid-type \
+        ros-jazzy-isaac-ros-nitros-odometry-type \
+        ros-jazzy-isaac-ros-nitros-point-cloud-type \
+        ros-jazzy-isaac-ros-nitros-pose-array-type \
+        ros-jazzy-isaac-ros-nitros-pose-cov-stamped-type \
+        ros-jazzy-isaac-ros-nitros-std-msg-type \
+        ros-jazzy-isaac-ros-nitros-tensor-list-type \
+        ros-jazzy-isaac-ros-nitros-topic-tools \
+        ros-jazzy-isaac-ros-nitros-twist-type \
+        ros-jazzy-isaac-ros-nova-interfaces \
+        ros-jazzy-isaac-ros-nvblox \
+        ros-jazzy-isaac-ros-occupancy-grid-localizer \
+        ros-jazzy-isaac-ros-pointcloud-interfaces \
+        ros-jazzy-isaac-ros-pointcloud-utils \
+        ros-jazzy-isaac-ros-pose-proc \
+        ros-jazzy-isaac-ros-pynitros \
+        ros-jazzy-isaac-ros-realsense \
+        ros-jazzy-isaac-ros-rtdetr \
+        ros-jazzy-isaac-ros-robots-tools \
+        ros-jazzy-isaac-ros-segformer \
+        ros-jazzy-isaac-ros-segment-anything \
+        ros-jazzy-isaac-ros-segment-anything2 \
+        ros-jazzy-isaac-ros-segment-anything2-interfaces \
+        ros-jazzy-isaac-ros-sipl-camera \
+        ros-jazzy-isaac-ros-stereo-image-proc \
+        ros-jazzy-isaac-ros-teleop \
+        ros-jazzy-isaac-ros-tensor-list-interfaces \
+        ros-jazzy-isaac-ros-tensor-proc \
+        ros-jazzy-isaac-ros-tensor-rt \
+        ros-jazzy-isaac-ros-triton \
+        ros-jazzy-isaac-ros-unet \
+        ros-jazzy-isaac-ros-usb-cam \
+        ros-jazzy-isaac-ros-vda5050-client \
+        ros-jazzy-isaac-ros-vda5050-client-bringup \
+        ros-jazzy-isaac-ros-visual-global-localization \
+        ros-jazzy-isaac-ros-visual-mapping \
+        ros-jazzy-isaac-ros-visual-slam \
+        ros-jazzy-isaac-ros-visual-slam-interfaces \
+        ros-jazzy-isaac-ros-vpi-utils \
+        ros-jazzy-isaac-ros-yolov8 \
+        ros-jazzy-isaac-ros-zed \
+    && rm -rf /var/lib/apt/lists/*
+
+# 8. ROS packages.
+#        ros-jazzy-isaac-ros-test
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y \
+        ros-jazzy-rmw-cyclonedds-cpp \
+        ros-jazzy-ackermann-msgs \
+        ros-jazzy-laser-filters \
+        ros-jazzy-laser-proc \
+        ros-jazzy-camera-info-manager \
+        ros-jazzy-cartographer \
+        ros-jazzy-cartographer-ros \
+        ros-jazzy-cartographer-rviz \
+        ros-jazzy-gxf-isaac-ros-cuda \
+        ros-jazzy-gxf-isaac-localization \
+        ros-jazzy-gxf-isaac-cuda \
+        ros-jazzy-gxf-isaac-flatscan-localization \
+        ros-jazzy-rqt-tf-tree \
+        ros-jazzy-tf2-tools \
+        ros-jazzy-image-transport-plugins \
+        ros-jazzy-rosbag2-tools \
+    && rm -rf /var/lib/apt/lists/*
+
+# Basic utilities.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y \
+        tmux \
+        iproute2 \
+        terminator \
+        vim \
+        htop \
+        can-utils \
+        bluez \
+        joystick \
+        git \
+        sshpass \
+        dialog \
+        curl \
+        wget \
+        net-tools \
+        tree \
+    && rm -rf /var/lib/apt/lists/*
