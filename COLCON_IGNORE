@@ -1,0 +1,1 @@
+This repository is packaged as a Debian CLI tool and should not be built by colcon.
