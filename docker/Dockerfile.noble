@@ -111,7 +111,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     curl -fsSL https://isaac.download.nvidia.com/isaac-ros/repos.key | gpg --dearmor | tee -a "$k" > /dev/null; \
     f="/etc/apt/sources.list.d/nvidia-isaac-ros.list"; \
     touch "$f"; \
-    s="deb [signed-by=$k] https://isaac.download.nvidia.com/isaac-ros/release-4.0 $(lsb_release -cs) main"; \
+    s="deb [signed-by=$k] https://isaac.download.nvidia.com/isaac-ros/release-4.4 $(lsb_release -cs) main"; \
     grep -qxF "$s" "$f" || echo "$s" | tee -a "$f"; \
     apt-get update \
     '
@@ -232,9 +232,9 @@ RUN python3 -m pip install --break-system-packages -U \
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 apt-key adv --fetch-key https://repo.download.nvidia.com/jetson/jetson-ota-public.asc ; \
 if [[ ${PLATFORM} == 'arm64' ]]; then \
-    add-apt-repository "deb http://repo.download.nvidia.com/jetson/common r38.2 main" ; \
+    add-apt-repository "deb http://repo.download.nvidia.com/jetson/common r39.2 main" ; \
 elif [[ ${PLATFORM} == 'amd64' ]]; then \
-    add-apt-repository "deb http://repo.download.nvidia.com/jetson/x86_64/noble r38.2 main" ; \
+    add-apt-repository "deb http://repo.download.nvidia.com/jetson/x86_64/noble r39.2 main" ; \
 else \
     echo "Unrecognized platform: ${PLATFORM}" && exit 1 ; \
 fi ; \
@@ -291,12 +291,12 @@ ENV LD_LIBRARY_PATH="/usr/local/lib:/opt/hpcx/ucx/lib:${LD_LIBRARY_PATH}"
 RUN  --mount=type=cache,target=/var/cache/apt,sharing=locked \
 if [[ ${PLATFORM} == 'arm64' ]]; then \
     cd /opt \
-    && wget -q https://isaac.download.nvidia.com/isaac-ros/release-4.0/generic/tritonserver.2.60-aarch64.tar.gz \
+    && wget -q https://isaac.download.nvidia.com/isaac-ros/release-4.4/generic/tritonserver.2.60-aarch64.tar.gz \
     && tar -xzvf tritonserver.2.60-aarch64.tar.gz \
     && rm tritonserver.2.60-aarch64.tar.gz; \
 elif [[ ${PLATFORM} == 'amd64' ]]; then \
     cd /opt \
-    && wget  https://isaac.download.nvidia.com/isaac-ros/release-4.0/generic/tritonserver.2.60.tar.gz \
+    && wget  https://isaac.download.nvidia.com/isaac-ros/release-4.4/generic/tritonserver.2.60.tar.gz \
     && tar -xzvf tritonserver.2.60.tar.gz \
     && rm tritonserver.2.60.tar.gz; \
 else \
@@ -325,7 +325,7 @@ ENV LD_LIBRARY_PATH="/opt/nvidia/vpi4/lib64:/usr/lib/aarch64-linux-gnu/tegra:/us
 # Install nvpl_slim_24.04
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     cd /opt && \
-    curl "https://isaac.download.nvidia.com/isaac-ros/release-4.0/generic/nvpl_slim_24.04.tar" --output nvpl_slim_24.04.tar && \
+    curl "https://isaac.download.nvidia.com/isaac-ros/release-4.4/generic/nvpl_slim_24.04.tar" --output nvpl_slim_24.04.tar && \
     tar -xf nvpl_slim_24.04.tar && \
     cp -r nvpl_slim_24.04/lib/* /usr/local/lib && \
     cp -r nvpl_slim_24.04/include/* /usr/local/include && \
@@ -393,7 +393,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 # Manually install gnat-23.so for isaac_ros_gxf, used to be in nvsci 7.0.0 but now removed.
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    wget https://isaac.download.nvidia.com/isaac-ros/release-4.0/generic/libgnat-23.so \
+    wget https://isaac.download.nvidia.com/isaac-ros/release-4.4/generic/libgnat-23.so \
     && cp libgnat-23.so /usr/lib/x86_64-linux-gnu/libgnat-23.so \
     && rm libgnat-23.so
 
