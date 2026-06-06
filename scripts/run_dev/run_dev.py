@@ -242,7 +242,15 @@ def get_workspace_mount_args(isaac_dir):
     return docker_args
 
 
-def get_docker_args(platform):
+def get_container_workspace_path(isaac_dir):
+    """Return the container-side workspace path for the host Isaac ROS workspace."""
+    workspace_name = os.path.basename(os.path.abspath(isaac_dir))
+    if not workspace_name:
+        workspace_name = "isaac_ros_ws"
+    return f"/workspaces/{workspace_name}"
+
+
+def get_docker_args(platform, container_workspace_path):
     # Return arguments as complete flag-value pairs for shell=True usage
     home_path = os.path.expanduser('~')
     docker_args = [
@@ -260,7 +268,8 @@ def get_docker_args(platform):
         "-e NVIDIA_DRIVER_CAPABILITIES=all",
         "-e ROS_DOMAIN_ID",
         "-e USER",
-        "-e ISAAC_ROS_WS=/workspaces/isaac_ros-dev",
+        f"-e ISAAC_ROS_WS={shlex.quote(container_workspace_path)}",
+        f"-e ISAAC_DIR={shlex.quote(container_workspace_path)}",
         f"-e HOST_USER_UID={os.getuid()}",
         f"-e HOST_USER_GID={os.getgid()}",
     ])
@@ -374,7 +383,8 @@ def load_docker_args_from_file():
 
 
 def run_docker_container(args, container_name, base_name, isaac_dir):
-    docker_args = get_docker_args(args.platform)
+    container_workspace_path = get_container_workspace_path(isaac_dir)
+    docker_args = get_docker_args(args.platform, container_workspace_path)
     docker_args.extend(get_workspace_mount_args(isaac_dir))
     file_args = load_docker_args_from_file()
 
@@ -390,7 +400,7 @@ def run_docker_container(args, container_name, base_name, isaac_dir):
         "-e TERM=xterm-256color",
         "-e COLORTERM=truecolor",
         "-e FORCE_COLOR=true",
-        "--workdir /workspaces/isaac_ros-dev",
+        f"--workdir {shlex.quote(container_workspace_path)}",
     ]
 
     # Pass ISAAC_ROS_PLATFORM if specified
@@ -404,7 +414,7 @@ def run_docker_container(args, container_name, base_name, isaac_dir):
 
     # Add remaining arguments
     docker_command_parts.extend([
-        f"-v {shlex.quote(isaac_dir)}:/workspaces/isaac_ros-dev",
+        f"-v {shlex.quote(isaac_dir)}:{shlex.quote(container_workspace_path)}",
         "-v /etc/localtime:/etc/localtime:ro",
         f"--name {shlex.quote(container_name)}",
         "--gpus all",
