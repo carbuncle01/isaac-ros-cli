@@ -15,7 +15,8 @@ ENV ROS_DISTRO=jazzy
 ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
 
 ARG LIBREALSENSE_SOURCE_VERSION=v2.56.3
-ARG REALSENSE_ROS_GIT_URL=https://github.com/realsenseai/realsense-ros.git
+# fixed: my forked realsense-ros repo to support ROS 2 jazzy and librealsense v2.56.3
+ARG REALSENSE_ROS_GIT_URL=https://github.com/carbuncle01/realsense-ros.git
 ARG REALSENSE_ROS_VERSION=r/4.56.3
 ARG LIBREALSENSE_BUILD_TOOL_OPTIONS=--force_rsusb
 
