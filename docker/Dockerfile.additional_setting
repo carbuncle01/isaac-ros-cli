@@ -61,6 +61,32 @@ RUN set -eux; \
     rm -rf /tmp/jetracer
 
 # 5. Extra Python packages are intentionally left for a future layer.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y \
+        python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# jetsonの場合、torchとtorchvisionをインストール
+
+RUN set -eux; \
+    # Install appropriate torch package depending on architecture (Jetson vs x86)
+    if [ "$(uname -m)" = "aarch64" ]; then \
+        python3 -m pip install \
+            torch==2.11.0 \
+            torchvision==0.25.0 \
+            --index-url https://pypi.jetson-ai-lab.io/sbsa/cu130; \
+    else \
+        python3 -m pip install \
+            torch==2.11.0 \
+            torchvision==0.25.0; \
+    fi
+
+RUN set -x && \
+    if [ "$(uname -m)" = "x86_64" ]; then \
+        pip install --no-cache-dir "matplotlib>=3.5,<4" "scipy>=1.8,<2" && \
+        pip install --no-cache-dir "quadprog>=0.1.11" && \
+        pip install --no-cache-dir "git+https://github.com/TUMFTM/trajectory_planning_helpers.git@master" --no-deps; \
+    fi
 
 # 6. Entrypoint additions.
 RUN mkdir -p /usr/local/bin/scripts/entrypoint_additions
