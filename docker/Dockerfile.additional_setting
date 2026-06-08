@@ -79,7 +79,16 @@ RUN set -eux; \
         python3 -m pip install \
             torch==2.11.0 \
             torchvision==0.25.0; \
+            opencv-python \
+            tqdm \
+            rosbags \
+            omegaconf \
+            hydra-core \
+            tensorboard \
+            onnx \
+            onnxruntime; \
     fi
+
 
 RUN set -x && \
     if [ "$(uname -m)" = "x86_64" ]; then \
