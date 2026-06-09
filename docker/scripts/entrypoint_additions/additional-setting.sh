@@ -25,7 +25,7 @@ sysctl -w net.ipv4.ipfrag_high_thresh=134217728
 print_info "Custom network settings applied."
 
 export HOME=${USER_HOME}
-chown -R ${HOST_USER_UID}:${HOST_USER_GID} ${USER_HOME}
+chown -R ${HOST_USER_UID}:${HOST_USER_GID} ${USER_HOME} || true
 
 # ------------------------------------------------------------
 # 3. joy_node: ジョイスティック
