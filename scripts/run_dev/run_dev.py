@@ -227,9 +227,9 @@ def get_workspace_mount_args(isaac_dir):
     sibling_mounts = {
         "scripts": "/scripts",
         "debug": "/debug",
-        "python_ws": "/python_ws",
-        "record": "/record",
-        "map": "/map",
+        "python_ws": "/workspaces/python_ws",
+        "record": "/workspaces/record",
+        "map": "/workspaces/map",
     }
 
     docker_args = []
