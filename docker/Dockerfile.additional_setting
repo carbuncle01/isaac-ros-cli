@@ -75,6 +75,8 @@ RUN set -eux; \
             torch==2.11.0 \
             torchvision==0.25.0 \
             --index-url https://pypi.jetson-ai-lab.io/sbsa/cu130; \
+
+        python3 -m pip install --break-system-packages git+https://github.com/rbonghi/jetson_stats.git; \
     else \
         python3 -m pip install --ignore-installed --break-system-packages \
             torch==2.11.0 \

@@ -782,7 +782,22 @@ def resolve_dockerfiles(
     return ImageBuildPlan(dockerfiles, image_key)
 
 
-def check_docker_image_exists(image):
+def check_local_docker_image_exists(image):
+    try:
+        subprocess.run(
+            ["docker", "image", "inspect", image],
+            capture_output=True,
+            check=True,
+        )
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+
+def check_docker_image_exists(image, include_local=False):
+    if include_local and check_local_docker_image_exists(image):
+        return True
+
     try:
         run_shell(
             f'docker manifest inspect {image}',
@@ -946,15 +961,22 @@ def main(image_key_set: List[str],
     for target_name in build_plan.target_names():
         target = docker_bake_dict['targets'][target_name]
         tag = target['tags'][0]
-        if (not skip_registry_check) and (check_docker_image_exists(tag) and not no_cache):
+        if (
+            (not skip_registry_check)
+            and (check_docker_image_exists(tag, include_local=build_local) and not no_cache)
+        ):
             print(f"Tag: {tag} exists, skipping")
             continue
         build_target_names.append(target_name)
 
     # Exit early if all tags exist and there's nothing to build
-    if not build_target_names and not config.target_image_name_:
-        print("All target images already exist. Nothing to build.")
-        return
+    if not build_target_names:
+        if not config.target_image_name_:
+            print("All target images already exist. Nothing to build.")
+            return
+        if check_docker_image_exists(config.target_image_name_, include_local=build_local):
+            print(f"Final image {config.target_image_name_} already exists. Nothing to build.")
+            return
 
     with tempfile.TemporaryDirectory() as tempdir:
         bake_filepath = os.path.join(tempdir, 'docker-bake.hcl')
