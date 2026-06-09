@@ -619,12 +619,7 @@ def main():
             sys.exit(1)
         base_name = cached_image_name
 
-    elif not make_docker_image_available(base_name, cached_image_name):
-        if not (args.build or args.build_local):
-            print(f"Error: Docker image {base_name} not found.")
-            print("Use --build to build remotely or --build-local to build locally.")
-            sys.exit(1)
-
+    elif args.build or args.build_local:
         build_args = {
             'image_key_set': env_list,
             'config_file': config_path,
@@ -644,6 +639,10 @@ def main():
         if not make_docker_image_available(base_name, cached_image_name):
             print(f"Error: Failed to build or pull image {base_name}")
             sys.exit(1)
+    elif not make_docker_image_available(base_name, cached_image_name):
+        print(f"Error: Docker image {base_name} not found.")
+        print("Use --build to build remotely or --build-local to build locally.")
+        sys.exit(1)
 
     print(f"Using image: {base_name}")
 
