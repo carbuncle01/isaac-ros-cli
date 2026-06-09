@@ -259,19 +259,20 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         tree \
     && rm -rf /var/lib/apt/lists/*
 
-# 9. FoundationStereo Models Download (x86_64 only)
-# 16GB未満のGPUメモリを想定し、デフォルトをlow_resに設定
+# 9. FoundationStereo models (x86_64 only).
+# 16GB 未満の GPU メモリを想定し、Docker image には low_res を含める。
 ENV FOUNDATIONSTEREO_MODEL_RES=low_res
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     if [ "$(uname -m)" = "x86_64" ]; then \
-        echo "Architecture is x86_64. Installing FoundationStereo models..." && \
+        export ISAAC_ROS_WS=/opt/isaac_ros_model_ws; \
+        echo "Architecture is x86_64. Installing FoundationStereo models into ${ISAAC_ROS_WS}..." && \
+        mkdir -p "${ISAAC_ROS_WS}" && \
         apt-get update && apt-get install -y \
             ros-jazzy-isaac-ros-foundationstereo-models-install \
         && rm -rf /var/lib/apt/lists/* && \
-        # ROS 2環境を読み込み、モデルダウンロードスクリプトを実行
         . /opt/ros/jazzy/setup.sh && \
-        ros2 run isaac_ros_foundationstereo_models_install install_foundationstereo_models.sh --eula --model_res ${FOUNDATIONSTEREO_MODEL_RES}; \
+        ros2 run isaac_ros_foundationstereo_models_install install_foundationstereo_models.sh --eula --model_res "${FOUNDATIONSTEREO_MODEL_RES}"; \
     else \
         echo "Skipping FoundationStereo model download. (Architecture is $(uname -m), not x86_64)"; \
     fi

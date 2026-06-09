@@ -26,8 +26,17 @@ print_info "Custom network settings applied."
 
 export HOME=${USER_HOME}
 # Bind-mounted dotfiles keep the host uid/gid. Avoid recursive chown because
-# read-only mounts such as .ssh, .aws, .bashrc, and .profile will reject it.
+# read-only mounts such as .ssh, .aws, and .profile will reject it.
 chown ${HOST_USER_UID}:${HOST_USER_GID} ${USER_HOME} || true
+
+IMAGE_MODEL_ASSETS="/opt/isaac_ros_model_ws/isaac_ros_assets"
+if [ -n "${ISAAC_ROS_WS:-}" ] && [ -d "${IMAGE_MODEL_ASSETS}" ]; then
+    WORKSPACE_ASSETS="${ISAAC_ROS_WS}/isaac_ros_assets"
+    if [ ! -e "${WORKSPACE_ASSETS}" ] && [ ! -L "${WORKSPACE_ASSETS}" ]; then
+        ln -s "${IMAGE_MODEL_ASSETS}" "${WORKSPACE_ASSETS}" || true
+        print_info "Linked image model assets to ${WORKSPACE_ASSETS}"
+    fi
+fi
 
 # ------------------------------------------------------------
 # 3. joy_node: ジョイスティック

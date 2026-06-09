@@ -200,7 +200,7 @@ def make_docker_image_available(base_name, cached_image_name):
 
 def get_existing_bash_configs():
     """Returns a list of existing bash configuration files in the user's home directory."""
-    config_files = ['.bashrc', '.bash_profile', '.profile', '.dircolors']
+    config_files = ['.bash_profile', '.profile', '.dircolors']
     existing_configs = []
     for file in config_files:
         if os.path.isfile(os.path.expanduser(f'~/{file}')):
