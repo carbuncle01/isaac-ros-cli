@@ -181,6 +181,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         ros-jazzy-tf2-tools \
         ros-jazzy-image-transport-plugins \
         ros-jazzy-rosbag2-tools \
+        ros-jazzy-joy \
     && rm -rf /var/lib/apt/lists/*
 
 # Basic utilities.
