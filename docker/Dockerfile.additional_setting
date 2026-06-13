@@ -82,7 +82,7 @@ RUN set -eux; \
             "scipy>=1.8,<2" \
             "quadprog>=0.1.11"; \
         /opt/env/bin/python -m pip install \
-            "git+https://github.com/TUMFTM/trajectory_planning_helpers.git@master" \
+            "git+https://github.com/carbuncle01/global_racetrajectory_optimization.git@magp" \
             --no-deps; \
     fi
 
