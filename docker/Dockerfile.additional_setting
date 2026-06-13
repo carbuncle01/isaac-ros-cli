@@ -81,9 +81,9 @@ RUN set -eux; \
             "matplotlib>=3.5,<4" \
             "scipy>=1.8,<2" \
             "quadprog>=0.1.11"; \
-        /opt/env/bin/python -m pip install \
-            "git+https://github.com/carbuncle01/global_racetrajectory_optimization.git@magp" \
-            --no-deps; \
+        # /opt/env/bin/python -m pip install \
+        #     "git+https://github.com/TUMFTM/trajectory_planning_helpers.git@master" \
+        #     --no-deps; \
     fi
 
 # 6. Entrypoint additions.
