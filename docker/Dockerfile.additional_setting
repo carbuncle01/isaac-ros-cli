@@ -161,7 +161,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         ros-jazzy-isaac-ros-visual-slam \
         ros-jazzy-isaac-ros-visual-slam-interfaces \
         ros-jazzy-isaac-ros-vpi-utils \
-        ros-jazzy-isaac-ros-yolov8 \
+        # ros-jazzy-isaac-ros-yolov8 \
     && rm -rf /var/lib/apt/lists/*
 
 # 8. ROS packages.
