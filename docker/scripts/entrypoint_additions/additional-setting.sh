@@ -56,7 +56,33 @@ else
 fi
 
 # ------------------------------------------------------------
-# 4. jetracer_node: GPIO
+# 4. USB serial devices: VESC and 2D LiDAR
+# ------------------------------------------------------------
+# Ubuntu normally assigns ttyACM*/ttyUSB* to dialout. Add it even when the
+# hardware is connected after container startup, then also mirror any custom
+# host GIDs used by udev rules.
+if getent group dialout > /dev/null; then
+    usermod -aG dialout ${USER_NAME}
+fi
+
+for SERIAL_DEVICE in /dev/ttyACM* /dev/ttyUSB*; do
+    if [ ! -c "${SERIAL_DEVICE}" ]; then
+        continue
+    fi
+
+    HOST_SERIAL_GID=$(stat -c '%g' "${SERIAL_DEVICE}")
+    EXISTING_SERIAL_GROUP=$(getent group "${HOST_SERIAL_GID}" | cut -d: -f1)
+    if [ -n "${EXISTING_SERIAL_GROUP}" ]; then
+        usermod -aG "${EXISTING_SERIAL_GROUP}" ${USER_NAME}
+    else
+        SERIAL_GROUP_NAME="serial_host_${HOST_SERIAL_GID}"
+        groupadd -g "${HOST_SERIAL_GID}" "${SERIAL_GROUP_NAME}"
+        usermod -aG "${SERIAL_GROUP_NAME}" ${USER_NAME}
+    fi
+done
+
+# ------------------------------------------------------------
+# 5. jetracer_node: GPIO
 # ------------------------------------------------------------
 if [ -c /dev/gpiochip0 ]; then
     HOST_GPIO_GID=999 
@@ -70,7 +96,7 @@ if [ -c /dev/gpiochip0 ]; then
 fi
 
 # ------------------------------------------------------------
-# 5. jetracer_node: I2C
+# 6. jetracer_node: I2C
 # ------------------------------------------------------------
 if [ -c /dev/i2c-7 ]; then
     HOST_I2C_GID=$(stat -c '%g' /dev/i2c-7)

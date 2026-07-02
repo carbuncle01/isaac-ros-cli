@@ -9,7 +9,6 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
 import os
-import glob
 import sys
 import subprocess
 import shlex
@@ -208,19 +207,6 @@ def get_existing_bash_configs():
     return existing_configs
 
 
-def append_existing_device(docker_args, device_path):
-    """Append an explicit Docker device argument when the host device exists."""
-    if os.path.exists(device_path):
-        docker_args.append(f"--device={device_path}")
-
-
-def append_existing_devices(docker_args, device_patterns):
-    """Append explicit Docker device arguments for all matching host devices."""
-    for pattern in device_patterns:
-        for device_path in sorted(glob.glob(pattern)):
-            append_existing_device(docker_args, device_path)
-
-
 def get_workspace_mount_args(isaac_dir):
     """Mount Isaac ROS sibling directories used by legacy run_dev.sh workflows."""
     isaac_parent_dir = os.path.dirname(os.path.abspath(isaac_dir))
@@ -256,6 +242,10 @@ def get_docker_args(platform, container_workspace_path):
     docker_args = [
         "-v /tmp/.X11-unix:/tmp/.X11-unix",
         f"-v {shlex.quote(home_path)}/.Xauthority:/home/admin/.Xauthority:rw",
+        # The development container is already privileged. Bind the host device
+        # tree so USB serial devices (ttyACM*, ttyUSB*, stable udev symlinks,
+        # etc.) and devices connected after container startup remain visible.
+        "-v /dev:/dev",
     ]
     # Add existing bash config files
     for config in get_existing_bash_configs():
@@ -275,7 +265,6 @@ def get_docker_args(platform, container_workspace_path):
     ])
     if os.path.isdir("/var/run/dbus"):
         docker_args.append("-v /var/run/dbus:/var/run/dbus")
-    append_existing_device(docker_args, "/dev/rfkill")
 
     if platform == "aarch64":
         if "SSH_AUTH_SOCK" in os.environ:
@@ -293,21 +282,7 @@ def get_docker_args(platform, container_workspace_path):
             "-v /usr/src/jetson_sipl_api:/usr/src/jetson_sipl_api",
             "--pid=host",
             "-v /usr/share/vpi3:/usr/share/vpi3",
-            "-v /dev/input:/dev/input",
-            "-v /dev/bus/usb:/dev/bus/usb",
         ])
-        append_existing_devices(
-            docker_args,
-            [
-                "/dev/gpiochip*",
-                "/dev/i2c-*",
-                "/dev/input/js*",
-                "/dev/input/event*",
-            ]
-        )
-        # CoE (Camera over Ethernet) device nodes
-        for coe_dev in glob.glob("/dev/coe-chan-*"):
-            docker_args.append(f"--device={coe_dev}")
 
         try:
             output = subprocess.check_output(

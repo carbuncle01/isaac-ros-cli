@@ -208,7 +208,48 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         tree \
     && rm -rf /var/lib/apt/lists/*
 
-# 9. FoundationStereo models (x86_64 only).
+# 9. Hokuyo urg_node2.
+# Keep the source revision pinned so container builds remain reproducible.
+# urg_library is a git submodule, so both clone and checkout must update
+# submodules recursively.
+ARG ROS_DISTRO=jazzy
+ARG URG_NODE2_GIT_URL=https://github.com/Hokuyo-aut/urg_node2.git
+ARG URG_NODE2_VERSION=f02d8af22db2a4322217f4c5803494f4ca2903ff
+
+RUN set -eux; \
+    git clone --recursive "${URG_NODE2_GIT_URL}" /tmp/urg_node2; \
+    cd /tmp/urg_node2; \
+    git checkout "${URG_NODE2_VERSION}"; \
+    git submodule update --init --recursive
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y \
+        devscripts \
+        dh-make \
+        fakeroot \
+        python3-bloom \
+    && source "/opt/ros/${ROS_DISTRO}/setup.bash" \
+    && rosdep update \
+    && rosdep install -y \
+        --from-paths /tmp/urg_node2 \
+        --ignore-src \
+        --rosdistro "${ROS_DISTRO}" \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    set -eux; \
+    source "/opt/ros/${ROS_DISTRO}/setup.bash"; \
+    cd /tmp/urg_node2; \
+    bloom-generate rosdebian --ros-distro "${ROS_DISTRO}"; \
+    fakeroot debian/rules binary; \
+    apt-get update; \
+    apt-get install -y /tmp/ros-${ROS_DISTRO}-urg-node2_*.deb; \
+    rm -rf \
+        /tmp/urg_node2 \
+        /tmp/ros-${ROS_DISTRO}-urg-node2_*.deb \
+        /var/lib/apt/lists/*
+
+# 10. FoundationStereo models (x86_64 only).
 # ENV FOUNDATIONSTEREO_MODEL_RES=low_res
 
 # RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
