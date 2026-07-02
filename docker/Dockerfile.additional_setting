@@ -238,7 +238,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && rm -rf /var/lib/apt/lists/*
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    set -eux; \
+    set -ex; \
     source "/opt/ros/${ROS_DISTRO}/setup.bash"; \
     cd /tmp/urg_node2; \
     bloom-generate rosdebian --ros-distro "${ROS_DISTRO}"; \
