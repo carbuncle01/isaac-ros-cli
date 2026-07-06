@@ -9,8 +9,9 @@
 
 import click
 
-from isaac_ros_cli.commands.init import init
 from isaac_ros_cli.commands.activate import activate
+from isaac_ros_cli.commands.init import init
+from isaac_ros_cli.commands.status import status
 
 
 @click.group()
@@ -22,6 +23,7 @@ def cli():
 # Register commands
 cli.add_command(activate)
 cli.add_command(init)
+cli.add_command(status)
 
 
 def main():

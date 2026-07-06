@@ -6,3 +6,4 @@ debian/*.substvars
 debian/*.debhelper.log
 debian/*-stamp
 debian/files
+.docker-deb-overrides/

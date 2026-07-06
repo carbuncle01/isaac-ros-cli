@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2025-2026, NVIDIA CORPORATION.  All rights reserved.
 #
 # NVIDIA CORPORATION and its licensors retain all intellectual property
 # and proprietary rights in and to this software, related documentation
@@ -8,19 +8,22 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
-import os
 import glob
-import sys
-import subprocess
+import os
 import shlex
+import subprocess
+import sys
+
 from build_image_layers import (
-    main as build_image_layers,
     check_docker_logins,
-    get_image_name)
+    get_image_name,
+    main as build_image_layers,
+)
 from isaac_ros_common_config_utils import (
+    get_build_order,
     get_isaac_ros_common_config_path,
     get_isaac_ros_common_config_values,
-    get_build_order)
+)
 
 
 def validate_isaac_dir(isaac_dir):
@@ -129,6 +132,7 @@ def remove_exited_container(container_name):
 
 
 def attach_to_running_container(container_name):
+    """Attach to an already-running container. Returns True if a session was created."""
     output = subprocess.check_output(
         [
             "docker",
@@ -165,7 +169,8 @@ def attach_to_running_container(container_name):
                 "FORCE_COLOR": "true"
             }
         )
-        sys.exit(0)
+        return True
+    return False
 
 
 def make_docker_image_available(base_name, cached_image_name):
@@ -388,6 +393,21 @@ def parse_args():
     import argparse
 
     parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--mode",
+        choices=["run", "build", "start"],
+        default="run",
+        help=(
+            "Lifecycle mode. "
+            "'build': resolve/build the image and exit without starting a container. "
+            "'start': start or attach to a container using an already-available image "
+            "(fails if the image is missing and no build flag is set). "
+            "'run': ensure the image exists (building if needed) then start a container "
+            "(current default behavior)."
+        )
+    )
+
     parser.add_argument("--env", action="append", required=False,
                         default=None)  # Keep default=None so user-provided envs override defaults
     DEFAULT_ENV_LIST = ["noble", "ros2_jazzy", "ros_eng", "realsense"]
@@ -453,6 +473,14 @@ def parse_args():
         default=None,
         help="Isaac ROS platform identifier (e.g., amd64, arm64-jetpack, arm64-fastos)"
     )
+    parser.add_argument(
+        "--build-arg",
+        action="append",
+        dest="build_args",
+        default=[],
+        metavar="KEY=VALUE",
+        help="Docker build argument forwarded to image resolution and build"
+    )
     args = parser.parse_args()
 
     # Apply default env values only if nothing was provided
@@ -513,27 +541,20 @@ def get_isaac_dir():
     return os.path.abspath(isaac_dir)
 
 
-def main():
-    args = parse_args()
-    config_path = get_isaac_ros_common_config_path()
-    config = get_isaac_ros_common_config_values(config_path)
-
-    env_list = get_build_order(
-        str(config['image_key_order'][0]).split('.'),
-        args.env
-    )
-    isaac_dir = get_isaac_dir()
-    container_name = args.container_name
-
+def validate_prerequisites(args, isaac_dir):
+    """Run all prerequisite checks (workspace, Docker, git-lfs)."""
     validate_isaac_dir(isaac_dir)
     check_user_in_docker_group()
     check_docker_running()
     check_git_lfs_installed()
     check_lfs_files(isaac_dir)
 
-    remove_exited_container(container_name)
-    attach_to_running_container(container_name)
 
+def resolve_target_image(args, config, env_list, build_args=None):
+    """Determine the target image name and cache registry.
+
+    Returns (base_name, cache_from_registry_name, cached_image_name).
+    """
     if args.no_cache:
         cache_from_registry_name = "local"
     else:
@@ -545,10 +566,14 @@ def main():
 
     cached_image_name = "cached_isaac_run_dev_image_local:latest"
     base_name = get_image_name(
-        cache_from_registry_name, env_list, args.isaac_ros_platform, include_hash=True)
-    if args.use_cached_build_image:
-        # Check if cached image exists before using it
+        cache_from_registry_name,
+        env_list,
+        args.isaac_ros_platform,
+        include_hash=True,
+        build_args=build_args,
+    )
 
+    if args.use_cached_build_image:
         cached_image_exists = subprocess.run(
             ["docker", "image", "inspect", cached_image_name],
             capture_output=True
@@ -561,35 +586,117 @@ def main():
             sys.exit(1)
         base_name = cached_image_name
 
-    elif not make_docker_image_available(base_name, cached_image_name):
-        if not (args.build or args.build_local):
-            print(f"Error: Docker image {base_name} not found.")
-            print("Use --build to build remotely or --build-local to build locally.")
-            sys.exit(1)
+    return base_name, cache_from_registry_name, cached_image_name
 
-        build_args = {
-            'image_key_set': env_list,
-            'config_file': config_path,
-            'target_image_name': base_name,
-            'verbose': args.verbose,
-            'no_cache': args.no_cache,
-            'isaac_ros_platform': args.isaac_ros_platform,
-        }
 
-        if args.build_local:
-            build_args['build_local'] = True
+def ensure_image_available(args, base_name, cached_image_name,
+                           config_path, env_list,
+                           allow_implicit_remote_build=False,
+                           build_args=None):
+    """Pull or build the Docker image so it is available locally.
 
-        if args.push:
-            build_args['push'] = True
+    Exits with an error if the image cannot be obtained.
+    """
+    if args.use_cached_build_image:
+        return
 
-        build_image_layers(**build_args)
-        if not make_docker_image_available(base_name, cached_image_name):
-            print(f"Error: Failed to build or pull image {base_name}")
-            sys.exit(1)
+    if make_docker_image_available(base_name, cached_image_name):
+        return
 
-    print(f"Using image: {base_name}")
+    if not (args.build or args.build_local or allow_implicit_remote_build):
+        print(f"Error: Docker image {base_name} not found.")
+        print("Use --build to build remotely or --build-local to build locally.")
+        sys.exit(1)
 
+    build_kwargs = {
+        'image_key_set': env_list,
+        'config_file': config_path,
+        'target_image_name': base_name,
+        'verbose': args.verbose,
+        'no_cache': args.no_cache,
+        'isaac_ros_platform': args.isaac_ros_platform,
+    }
+    if build_args:
+        build_kwargs['build_args'] = build_args
+
+    if args.build_local:
+        build_kwargs['build_local'] = True
+
+    if args.push:
+        build_kwargs['push'] = True
+
+    build_image_layers(**build_kwargs)
+    if not make_docker_image_available(base_name, cached_image_name):
+        print(f"Error: Failed to build or pull image {base_name}")
+        sys.exit(1)
+
+
+def check_local_image_exists(image_name):
+    """Return True if the Docker image exists locally."""
+    return subprocess.run(
+        ["docker", "image", "inspect", image_name],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    ).returncode == 0
+
+
+def start_container(args, container_name, base_name, isaac_dir):
+    """Clean up exited containers, attach to a running one, or launch a new one."""
+    remove_exited_container(container_name)
+    if attach_to_running_container(container_name):
+        return
     run_docker_container(args, container_name, base_name, isaac_dir)
+
+
+def main():
+    args = parse_args()
+    config_path = get_isaac_ros_common_config_path()
+    config = get_isaac_ros_common_config_values(config_path)
+
+    env_list = get_build_order(
+        str(config['image_key_order'][0]).split('.'),
+        args.env
+    )
+    isaac_dir = get_isaac_dir()
+    build_args = args.build_args
+    container_name = args.container_name
+
+    validate_prerequisites(args, isaac_dir)
+
+    if args.mode == 'build':
+        base_name, _, cached_image_name = resolve_target_image(
+            args, config, env_list, build_args=build_args)
+        ensure_image_available(
+            args, base_name, cached_image_name, config_path, env_list,
+            allow_implicit_remote_build=True,
+            build_args=build_args)
+        print(f"Image ready: {base_name}")
+        return
+
+    if args.mode == 'start':
+        base_name, _, cached_image_name = resolve_target_image(
+            args, config, env_list, build_args=build_args)
+        if not check_local_image_exists(base_name):
+            print(f"Error: Docker image {base_name} not found locally.")
+            print("Build the image first with '--mode build', or use '--mode run' "
+                  "to build and start in one step.")
+            sys.exit(1)
+        print(f"Using image: {base_name}")
+        start_container(args, container_name, base_name, isaac_dir)
+        return
+
+    # Default 'run' mode: preserve the historical attach-first behavior.
+    remove_exited_container(container_name)
+    if attach_to_running_container(container_name):
+        return
+
+    # No running container was found, so ensure the image exists and launch one.
+    base_name, _, cached_image_name = resolve_target_image(
+        args, config, env_list, build_args=build_args)
+    ensure_image_available(
+        args, base_name, cached_image_name, config_path, env_list, build_args=build_args)
+    print(f"Using image: {base_name}")
+    start_container(args, container_name, base_name, isaac_dir)
 
 
 if __name__ == "__main__":

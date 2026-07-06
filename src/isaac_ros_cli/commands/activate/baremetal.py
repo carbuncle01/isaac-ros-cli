@@ -1,4 +1,4 @@
-# Copyright (c) 2025, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2025-2026, NVIDIA CORPORATION. All rights reserved.
 #
 # NVIDIA CORPORATION and its licensors retain all intellectual property
 # and proprietary rights in and to this software, related documentation
@@ -6,10 +6,12 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
-import click
-import subprocess
 import os
+import subprocess
 
+import click
+
+from isaac_ros_cli.config import IsaacRosCliConfig
 from isaac_ros_cli.platform import Platform
 
 BAREMETAL_ACTIVATED_ENV_VAR = "ISAAC_ROS_BAREMETAL_ACTIVATED"
@@ -20,7 +22,7 @@ def is_baremetal_activated():
     return os.environ.get(BAREMETAL_ACTIVATED_ENV_VAR) == "1"
 
 
-def activate_baremetal(platform: Platform):
+def activate_baremetal(_cfg: IsaacRosCliConfig, platform: Platform):
     """Activate baremetal Isaac ROS environment (directly on host system)."""
 
     click.echo("🤖 Isaac ROS Environment Active")

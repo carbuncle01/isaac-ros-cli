@@ -1370,31 +1370,6 @@ cudnn_cmake_module:
     focal: [ros-humble-cudnn-cmake-module]
     jammy: [ros-humble-cudnn-cmake-module]
     noble: [ros-jazzy-cudnn-cmake-module]
-custom_nitros_dnn_image_encoder:
-  ubuntu:
-    focal: [ros-humble-custom-nitros-dnn-image-encoder]
-    jammy: [ros-humble-custom-nitros-dnn-image-encoder]
-    noble: [ros-jazzy-custom-nitros-dnn-image-encoder]
-custom_nitros_image:
-  ubuntu:
-    focal: [ros-humble-custom-nitros-image]
-    jammy: [ros-humble-custom-nitros-image]
-    noble: [ros-jazzy-custom-nitros-image]
-custom_nitros_message_filter:
-  ubuntu:
-    focal: [ros-humble-custom-nitros-message-filter]
-    jammy: [ros-humble-custom-nitros-message-filter]
-    noble: [ros-jazzy-custom-nitros-message-filter]
-custom_nitros_message_filter_interfaces:
-  ubuntu:
-    focal: [ros-humble-custom-nitros-message-filter-interfaces]
-    jammy: [ros-humble-custom-nitros-message-filter-interfaces]
-    noble: [ros-jazzy-custom-nitros-message-filter-interfaces]
-custom_nitros_string:
-  ubuntu:
-    focal: [ros-humble-custom-nitros-string]
-    jammy: [ros-humble-custom-nitros-string]
-    noble: [ros-jazzy-custom-nitros-string]
 cv_bridge:
   ubuntu:
     focal: [ros-humble-cv-bridge]
@@ -2908,56 +2883,21 @@ gtsam_dbgsym:
     focal: [ros-humble-gtsam-dbgsym]
     jammy: [ros-humble-gtsam-dbgsym]
     noble: [ros-jazzy-gtsam-dbgsym]
-gxf_isaac_argus:
-  ubuntu:
-    focal: [ros-humble-gxf-isaac-argus]
-    jammy: [ros-humble-gxf-isaac-argus]
-    noble: [ros-jazzy-gxf-isaac-argus]
 gxf_isaac_atlas:
   ubuntu:
     focal: [ros-humble-gxf-isaac-atlas]
     jammy: [ros-humble-gxf-isaac-atlas]
     noble: [ros-jazzy-gxf-isaac-atlas]
-gxf_isaac_bmi088_imu:
-  ubuntu:
-    focal: [ros-humble-gxf-isaac-bmi088-imu]
-    jammy: [ros-humble-gxf-isaac-bmi088-imu]
-    noble: [ros-jazzy-gxf-isaac-bmi088-imu]
 gxf_isaac_camera_utils:
   ubuntu:
     focal: [ros-humble-gxf-isaac-camera-utils]
     jammy: [ros-humble-gxf-isaac-camera-utils]
     noble: [ros-jazzy-gxf-isaac-camera-utils]
-gxf_isaac_centerpose:
-  ubuntu:
-    focal: [ros-humble-gxf-isaac-centerpose]
-    jammy: [ros-humble-gxf-isaac-centerpose]
-    noble: [ros-jazzy-gxf-isaac-centerpose]
 gxf_isaac_cuda:
   ubuntu:
     focal: [ros-humble-gxf-isaac-cuda]
     jammy: [ros-humble-gxf-isaac-cuda]
     noble: [ros-jazzy-gxf-isaac-cuda]
-gxf_isaac_depth_image_proc:
-  ubuntu:
-    focal: [ros-humble-gxf-isaac-depth-image-proc]
-    jammy: [ros-humble-gxf-isaac-depth-image-proc]
-    noble: [ros-jazzy-gxf-isaac-depth-image-proc]
-gxf_isaac_detectnet:
-  ubuntu:
-    focal: [ros-humble-gxf-isaac-detectnet]
-    jammy: [ros-humble-gxf-isaac-detectnet]
-    noble: [ros-jazzy-gxf-isaac-detectnet]
-gxf_isaac_dope:
-  ubuntu:
-    focal: [ros-humble-gxf-isaac-dope]
-    jammy: [ros-humble-gxf-isaac-dope]
-    noble: [ros-jazzy-gxf-isaac-dope]
-gxf_isaac_ess:
-  ubuntu:
-    focal: [ros-humble-gxf-isaac-ess]
-    jammy: [ros-humble-gxf-isaac-ess]
-    noble: [ros-jazzy-gxf-isaac-ess]
 gxf_isaac_fiducials:
   ubuntu:
     focal: [ros-humble-gxf-isaac-fiducials]
@@ -2983,21 +2923,6 @@ gxf_isaac_gxf_helpers:
     focal: [ros-humble-gxf-isaac-gxf-helpers]
     jammy: [ros-humble-gxf-isaac-gxf-helpers]
     noble: [ros-jazzy-gxf-isaac-gxf-helpers]
-gxf_isaac_hesai:
-  ubuntu:
-    focal: [ros-humble-gxf-isaac-hesai]
-    jammy: [ros-humble-gxf-isaac-hesai]
-    noble: [ros-jazzy-gxf-isaac-hesai]
-gxf_isaac_image_flip:
-  ubuntu:
-    focal: [ros-humble-gxf-isaac-image-flip]
-    jammy: [ros-humble-gxf-isaac-image-flip]
-    noble: [ros-jazzy-gxf-isaac-image-flip]
-gxf_isaac_imu_utils:
-  ubuntu:
-    focal: [ros-humble-gxf-isaac-imu-utils]
-    jammy: [ros-humble-gxf-isaac-imu-utils]
-    noble: [ros-jazzy-gxf-isaac-imu-utils]
 gxf_isaac_localization:
   ubuntu:
     focal: [ros-humble-gxf-isaac-localization]
@@ -3038,11 +2963,6 @@ gxf_isaac_range_scan_processing:
     focal: [ros-humble-gxf-isaac-range-scan-processing]
     jammy: [ros-humble-gxf-isaac-range-scan-processing]
     noble: [ros-jazzy-gxf-isaac-range-scan-processing]
-gxf_isaac_rectify:
-  ubuntu:
-    focal: [ros-humble-gxf-isaac-rectify]
-    jammy: [ros-humble-gxf-isaac-rectify]
-    noble: [ros-jazzy-gxf-isaac-rectify]
 gxf_isaac_ros_cuda:
   ubuntu:
     focal: [ros-humble-gxf-isaac-ros-cuda]
@@ -3058,26 +2978,6 @@ gxf_isaac_ros_messages:
     focal: [ros-humble-gxf-isaac-ros-messages]
     jammy: [ros-humble-gxf-isaac-ros-messages]
     noble: [ros-jazzy-gxf-isaac-ros-messages]
-gxf_isaac_ros_segment_anything:
-  ubuntu:
-    focal: [ros-humble-gxf-isaac-ros-segment-anything]
-    jammy: [ros-humble-gxf-isaac-ros-segment-anything]
-    noble: [ros-jazzy-gxf-isaac-ros-segment-anything]
-gxf_isaac_ros_unet:
-  ubuntu:
-    focal: [ros-humble-gxf-isaac-ros-unet]
-    jammy: [ros-humble-gxf-isaac-ros-unet]
-    noble: [ros-jazzy-gxf-isaac-ros-unet]
-gxf_isaac_segway:
-  ubuntu:
-    focal: [ros-humble-gxf-isaac-segway]
-    jammy: [ros-humble-gxf-isaac-segway]
-    noble: [ros-jazzy-gxf-isaac-segway]
-gxf_isaac_sgm:
-  ubuntu:
-    focal: [ros-humble-gxf-isaac-sgm]
-    jammy: [ros-humble-gxf-isaac-sgm]
-    noble: [ros-jazzy-gxf-isaac-sgm]
 gxf_isaac_sight:
   ubuntu:
     focal: [ros-humble-gxf-isaac-sight]
@@ -3088,36 +2988,16 @@ gxf_isaac_synchronization:
     focal: [ros-humble-gxf-isaac-synchronization]
     jammy: [ros-humble-gxf-isaac-synchronization]
     noble: [ros-jazzy-gxf-isaac-synchronization]
-gxf_isaac_tensor_rt:
-  ubuntu:
-    focal: [ros-humble-gxf-isaac-tensor-rt]
-    jammy: [ros-humble-gxf-isaac-tensor-rt]
-    noble: [ros-jazzy-gxf-isaac-tensor-rt]
-gxf_isaac_tensorops:
-  ubuntu:
-    focal: [ros-humble-gxf-isaac-tensorops]
-    jammy: [ros-humble-gxf-isaac-tensorops]
-    noble: [ros-jazzy-gxf-isaac-tensorops]
 gxf_isaac_timestamp_correlator:
   ubuntu:
     focal: [ros-humble-gxf-isaac-timestamp-correlator]
     jammy: [ros-humble-gxf-isaac-timestamp-correlator]
     noble: [ros-jazzy-gxf-isaac-timestamp-correlator]
-gxf_isaac_triton:
-  ubuntu:
-    focal: [ros-humble-gxf-isaac-triton]
-    jammy: [ros-humble-gxf-isaac-triton]
-    noble: [ros-jazzy-gxf-isaac-triton]
 gxf_isaac_utils:
   ubuntu:
     focal: [ros-humble-gxf-isaac-utils]
     jammy: [ros-humble-gxf-isaac-utils]
     noble: [ros-jazzy-gxf-isaac-utils]
-gxf_isaac_video_buffer_utils:
-  ubuntu:
-    focal: [ros-humble-gxf-isaac-video-buffer-utils]
-    jammy: [ros-humble-gxf-isaac-video-buffer-utils]
-    noble: [ros-jazzy-gxf-isaac-video-buffer-utils]
 hardware_interface:
   ubuntu:
     focal: [ros-humble-hardware-interface]
@@ -3148,11 +3028,6 @@ hash_library_vendor_dbgsym:
     focal: [ros-humble-hash-library-vendor-dbgsym]
     jammy: [ros-humble-hash-library-vendor-dbgsym]
     noble: [ros-jazzy-hash-library-vendor-dbgsym]
-hawk_description:
-  ubuntu:
-    focal: [ros-humble-hawk-description]
-    jammy: [ros-humble-hawk-description]
-    noble: [ros-jazzy-hawk-description]
 heaphook:
   ubuntu:
     focal: [ros-humble-heaphook]
@@ -3542,6 +3417,11 @@ isaac_ros_manipulation_bringup:
     focal: [ros-humble-isaac-ros-manipulation-bringup]
     jammy: [ros-humble-isaac-ros-manipulation-bringup]
     noble: [ros-jazzy-isaac-ros-manipulation-bringup]
+isaac_ros_manipulation_dnn_policy:
+  ubuntu:
+    focal: [ros-humble-isaac-ros-manipulation-dnn-policy]
+    jammy: [ros-humble-isaac-ros-manipulation-dnn-policy]
+    noble: [ros-jazzy-isaac-ros-manipulation-dnn-policy]
 isaac_ros_manipulation_interfaces:
   ubuntu:
     focal: [ros-humble-isaac-ros-manipulation-interfaces]
@@ -3557,11 +3437,11 @@ isaac_ros_manipulation_ros_python_utils:
     focal: [ros-humble-isaac-ros-manipulation-ros-python-utils]
     jammy: [ros-humble-isaac-ros-manipulation-ros-python-utils]
     noble: [ros-jazzy-isaac-ros-manipulation-ros-python-utils]
-isaac_ros_manipulation_robot_description:
+isaac_ros_manipulation_ur_robot_description:
   ubuntu:
-    focal: [ros-humble-isaac-ros-manipulation-robot-description]
-    jammy: [ros-humble-isaac-ros-manipulation-robot-description]
-    noble: [ros-jazzy-isaac-ros-manipulation-robot-description]
+    focal: [ros-humble-isaac-ros-manipulation-ur-robot-description]
+    jammy: [ros-humble-isaac-ros-manipulation-ur-robot-description]
+    noble: [ros-jazzy-isaac-ros-manipulation-ur-robot-description]
 isaac_ros_manipulation_servers:
   ubuntu:
     focal: [ros-humble-isaac-ros-manipulation-servers]
@@ -3582,21 +3462,16 @@ isaac_ros_manipulation_test_utils:
     focal: [ros-humble-isaac-ros-manipulation-test-utils]
     jammy: [ros-humble-isaac-ros-manipulation-test-utils]
     noble: [ros-jazzy-isaac-ros-manipulation-test-utils]
-isaac_ros_manipulation_ur_dnn_policy:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-manipulation-ur-dnn-policy]
-    jammy: [ros-humble-isaac-ros-manipulation-ur-dnn-policy]
-    noble: [ros-jazzy-isaac-ros-manipulation-ur-dnn-policy]
 isaac_ros_manipulation_gear_assembly:
   ubuntu:
     focal: [ros-humble-isaac-ros-manipulation-gear-assembly]
     jammy: [ros-humble-isaac-ros-manipulation-gear-assembly]
     noble: [ros-jazzy-isaac-ros-manipulation-gear-assembly]
-isaac_ros_manipulation_isaac_sim_utils:
+isaac_ros_manipulation_ur_isaac_sim_utils:
   ubuntu:
-    focal: [ros-humble-isaac-ros-manipulation-isaac-sim-utils]
-    jammy: [ros-humble-isaac-ros-manipulation-isaac-sim-utils]
-    noble: [ros-jazzy-isaac-ros-manipulation-isaac-sim-utils]
+    focal: [ros-humble-isaac-ros-manipulation-ur-isaac-sim-utils]
+    jammy: [ros-humble-isaac-ros-manipulation-ur-isaac-sim-utils]
+    noble: [ros-jazzy-isaac-ros-manipulation-ur-isaac-sim-utils]
 isaac_ros_manipulation_object_following:
   ubuntu:
     focal: [ros-humble-isaac-ros-manipulation-object-following]
@@ -3607,6 +3482,22 @@ isaac_ros_manipulation_pose_to_pose:
     focal: [ros-humble-isaac-ros-manipulation-pose-to-pose]
     jammy: [ros-humble-isaac-ros-manipulation-pose-to-pose]
     noble: [ros-jazzy-isaac-ros-manipulation-pose-to-pose]
+isaac_ros_manipulation_flexiv_driver_utils:
+  ubuntu:
+    noble: [ros-jazzy-isaac-ros-manipulation-flexiv-driver-utils]
+isaac_ros_manipulation_flexiv_robot_description:
+  ubuntu:
+    noble: [ros-jazzy-isaac-ros-manipulation-flexiv-robot-description]
+isaac_ros_manipulation_robot_utils:
+  ubuntu:
+    focal: [ros-humble-isaac-ros-manipulation-robot-utils]
+    jammy: [ros-humble-isaac-ros-manipulation-robot-utils]
+    noble: [ros-jazzy-isaac-ros-manipulation-robot-utils]
+isaac_ros_manipulation_ur_driver_utils:
+  ubuntu:
+    focal: [ros-humble-isaac-ros-manipulation-ur-driver-utils]
+    jammy: [ros-humble-isaac-ros-manipulation-ur-driver-utils]
+    noble: [ros-jazzy-isaac-ros-manipulation-ur-driver-utils]
 isaac_mapping_and_localization_ros:
   ubuntu:
     focal: [ros-humble-isaac-mapping-and-localization-ros]
@@ -3626,6 +3517,9 @@ isaac_ros_agile_booster_t1:
 isaac_ros_agile_unitree_g1:
   ubuntu:
     noble: [ros-jazzy-isaac-ros-agile-unitree-g1]
+isaac_ros_franka_fr3_reach:
+  ubuntu:
+    noble: [ros-jazzy-isaac-ros-franka-fr3-reach]
 isaac_ros_apriltag:
   ubuntu:
     focal: [ros-humble-isaac-ros-apriltag]
@@ -3641,26 +3535,11 @@ isaac_ros_apriltag_interfaces:
     focal: [ros-humble-isaac-ros-apriltag-interfaces]
     jammy: [ros-humble-isaac-ros-apriltag-interfaces]
     noble: [ros-jazzy-isaac-ros-apriltag-interfaces]
-isaac_ros_argus_camera:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-argus-camera]
-    jammy: [ros-humble-isaac-ros-argus-camera]
-    noble: [ros-jazzy-isaac-ros-argus-camera]
-isaac_ros_argus_camera_benchmark:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-argus-camera-benchmark]
-    jammy: [ros-humble-isaac-ros-argus-camera-benchmark]
-    noble: [ros-jazzy-isaac-ros-argus-camera-benchmark]
 isaac_ros_benchmark:
   ubuntu:
     focal: [ros-humble-isaac-ros-benchmark]
     jammy: [ros-humble-isaac-ros-benchmark]
     noble: [ros-jazzy-isaac-ros-benchmark]
-isaac_ros_calibration_validation:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-calibration-validation]
-    jammy: [ros-humble-isaac-ros-calibration-validation]
-    noble: [ros-jazzy-isaac-ros-calibration-validation]
 isaac_ros_centerpose:
   ubuntu:
     focal: [ros-humble-isaac-ros-centerpose]
@@ -3682,11 +3561,6 @@ isaac_ros_common:
 isaac_ros_compass_controller:
   ubuntu:
     noble: [ros-jazzy-isaac-ros-compass-controller]
-isaac_ros_correlated_timestamp_driver:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-correlated-timestamp-driver]
-    jammy: [ros-humble-isaac-ros-correlated-timestamp-driver]
-    noble: [ros-jazzy-isaac-ros-correlated-timestamp-driver]
 isaac_ros_cumotion:
   ubuntu:
     focal: [ros-humble-isaac-ros-cumotion]
@@ -3725,16 +3599,17 @@ isaac_ros_cumotion_robot_segmenter:
     focal: [ros-humble-isaac-ros-cumotion-robot-segmenter]
     jammy: [ros-humble-isaac-ros-cumotion-robot-segmenter]
     noble: [ros-jazzy-isaac-ros-cumotion-robot-segmenter]
+isaac_ros_cvcuda_utils:
+  ubuntu:
+    noble: [ros-jazzy-isaac-ros-cvcuda-utils]
+isaac_ros_data_flywheel:
+  ubuntu:
+    noble: [ros-jazzy-isaac-ros-data-flywheel]
 isaac_ros_data_recorder:
   ubuntu:
     focal: [ros-humble-isaac-ros-data-recorder]
     jammy: [ros-humble-isaac-ros-data-recorder]
     noble: [ros-jazzy-isaac-ros-data-recorder]
-isaac_ros_data_recorder_nova_benchmark:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-data-recorder-nova-benchmark]
-    jammy: [ros-humble-isaac-ros-data-recorder-nova-benchmark]
-    noble: [ros-jazzy-isaac-ros-data-recorder-nova-benchmark]
 isaac_ros_data_replayer:
   ubuntu:
     focal: [ros-humble-isaac-ros-data-replayer]
@@ -3745,11 +3620,6 @@ isaac_ros_data_validation:
     focal: [ros-humble-isaac-ros-data-validation]
     jammy: [ros-humble-isaac-ros-data-validation]
     noble: [ros-jazzy-isaac-ros-data-validation]
-isaac_ros_deepmap_data_converter:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-deepmap-data-converter]
-    jammy: [ros-humble-isaac-ros-deepmap-data-converter]
-    noble: [ros-jazzy-isaac-ros-deepmap-data-converter]
 isaac_ros_deploy:
   ubuntu:
     noble: [ros-jazzy-isaac-ros-deploy]
@@ -3798,6 +3668,9 @@ isaac_ros_dnn_inference_test:
     focal: [ros-humble-isaac-ros-dnn-inference-test]
     jammy: [ros-humble-isaac-ros-dnn-inference-test]
     noble: [ros-jazzy-isaac-ros-dnn-inference-test]
+isaac_ros_dnn_stereo_decoder:
+  ubuntu:
+    noble: [ros-jazzy-isaac-ros-dnn-stereo-decoder]
 isaac_ros_dope:
   ubuntu:
     focal: [ros-humble-isaac-ros-dope]
@@ -3823,11 +3696,6 @@ isaac_ros_ess_models_install:
     focal: [ros-humble-isaac-ros-ess-models-install]
     jammy: [ros-humble-isaac-ros-ess-models-install]
     noble: [ros-jazzy-isaac-ros-ess-models-install]
-isaac_ros_ess_nova_benchmark:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-ess-nova-benchmark]
-    jammy: [ros-humble-isaac-ros-ess-nova-benchmark]
-    noble: [ros-jazzy-isaac-ros-ess-nova-benchmark]
 isaac_ros_examples:
   ubuntu:
     focal: [ros-humble-isaac-ros-examples]
@@ -3875,9 +3743,9 @@ isaac_ros_franka_ompl_benchmark:
 isaac_ros_gr00t:
   ubuntu:
     noble: [ros-jazzy-isaac-ros-gr00t]
-isaac_ros_gr00t_n16_unitree_g1:
+isaac_ros_gr00t_unitree_g1_install:
   ubuntu:
-    noble: [ros-jazzy-isaac-ros-gr00t-n16-unitree-g1]
+    noble: [ros-jazzy-isaac-ros-gr00t-unitree-g1-install]
 isaac_ros_grounding_dino:
   ubuntu:
     focal: [ros-humble-isaac-ros-grounding-dino]
@@ -3896,11 +3764,6 @@ isaac_ros_grounding_dino_models_install:
     focal: [ros-humble-isaac-ros-grounding-dino-models-install]
     jammy: [ros-humble-isaac-ros-grounding-dino-models-install]
     noble: [ros-jazzy-isaac-ros-grounding-dino-models-install]
-isaac_ros_ground_calibration:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-ground-calibration]
-    jammy: [ros-humble-isaac-ros-ground-calibration]
-    noble: [ros-jazzy-isaac-ros-ground-calibration]
 isaac_ros_gxf:
   ubuntu:
     focal: [ros-humble-isaac-ros-gxf]
@@ -3926,21 +3789,6 @@ isaac_ros_h264_encoder_benchmark:
     focal: [ros-humble-isaac-ros-h264-encoder-benchmark]
     jammy: [ros-humble-isaac-ros-h264-encoder-benchmark]
     noble: [ros-jazzy-isaac-ros-h264-encoder-benchmark]
-isaac_ros_hawk:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-hawk]
-    jammy: [ros-humble-isaac-ros-hawk]
-    noble: [ros-jazzy-isaac-ros-hawk]
-isaac_ros_hawk_nova_benchmark:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-hawk-nova-benchmark]
-    jammy: [ros-humble-isaac-ros-hawk-nova-benchmark]
-    noble: [ros-jazzy-isaac-ros-hawk-nova-benchmark]
-isaac_ros_hesai:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-hesai]
-    jammy: [ros-humble-isaac-ros-hesai]
-    noble: [ros-jazzy-isaac-ros-hesai]
 isaac_ros_image_pipeline:
   ubuntu:
     focal: [ros-humble-isaac-ros-image-pipeline]
@@ -3956,11 +3804,6 @@ isaac_ros_image_proc_benchmark:
     focal: [ros-humble-isaac-ros-image-proc-benchmark]
     jammy: [ros-humble-isaac-ros-image-proc-benchmark]
     noble: [ros-jazzy-isaac-ros-image-proc-benchmark]
-isaac_ros_imu_bmi088:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-imu-bmi088]
-    jammy: [ros-humble-isaac-ros-imu-bmi088]
-    noble: [ros-jazzy-isaac-ros-imu-bmi088]
 isaac_ros_integration_test:
   ubuntu:
     focal: [ros-humble-isaac-ros-integration-test]
@@ -3976,6 +3819,9 @@ isaac_ros_integration_test_interfaces:
     focal: [ros-humble-isaac-ros-integration-test-interfaces]
     jammy: [ros-humble-isaac-ros-integration-test-interfaces]
     noble: [ros-jazzy-isaac-ros-integration-test-interfaces]
+isaac_ros_inverse_dynamics:
+  ubuntu:
+    noble: [ros-jazzy-isaac-ros-inverse-dynamics]
 isaac_ros_jetson_stats:
   ubuntu:
     focal: [ros-humble-isaac-ros-jetson-stats]
@@ -3999,16 +3845,14 @@ isaac_ros_launch_utils:
 isaac_ros_learned_policies:
   ubuntu:
     noble: [ros-jazzy-isaac-ros-learned-policies]
-isaac_ros_lidar_camera_projection:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-lidar-camera-projection]
-    jammy: [ros-humble-isaac-ros-lidar-camera-projection]
-    noble: [ros-jazzy-isaac-ros-lidar-camera-projection]
 isaac_ros_managed_nitros:
   ubuntu:
     focal: [ros-humble-isaac-ros-managed-nitros]
     jammy: [ros-humble-isaac-ros-managed-nitros]
     noble: [ros-jazzy-isaac-ros-managed-nitros]
+isaac_ros_mcap_lerobot_converter:
+  ubuntu:
+    noble: [ros-jazzy-isaac-ros-mcap-lerobot-converter]
 isaac_ros_mega_controller:
   ubuntu:
     focal: [ros-humble-isaac-ros-mega-controller]
@@ -4034,11 +3878,6 @@ isaac_ros_mqtt_bridge:
     focal: [ros-humble-isaac-ros-mqtt-bridge]
     jammy: [ros-humble-isaac-ros-mqtt-bridge]
     noble: [ros-jazzy-isaac-ros-mqtt-bridge]
-isaac_ros_navigator:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-navigator]
-    jammy: [ros-humble-isaac-ros-navigator]
-    noble: [ros-jazzy-isaac-ros-navigator]
 isaac_ros_nitros:
   ubuntu:
     focal: [ros-humble-isaac-ros-nitros]
@@ -4164,31 +4003,16 @@ isaac_ros_nitros_twist_type:
     focal: [ros-humble-isaac-ros-nitros-twist-type]
     jammy: [ros-humble-isaac-ros-nitros-twist-type]
     noble: [ros-jazzy-isaac-ros-nitros-twist-type]
-isaac_ros_nova:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-nova]
-    jammy: [ros-humble-isaac-ros-nova]
-    noble: [ros-jazzy-isaac-ros-nova]
 isaac_ros_nova_interfaces:
   ubuntu:
     focal: [ros-humble-isaac-ros-nova-interfaces]
     jammy: [ros-humble-isaac-ros-nova-interfaces]
     noble: [ros-jazzy-isaac-ros-nova-interfaces]
-isaac_ros_nova_recorder:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-nova-recorder]
-    jammy: [ros-humble-isaac-ros-nova-recorder]
-    noble: [ros-jazzy-isaac-ros-nova-recorder]
 isaac_ros_nvblox:
   ubuntu:
     focal: [ros-humble-isaac-ros-nvblox]
     jammy: [ros-humble-isaac-ros-nvblox]
     noble: [ros-jazzy-isaac-ros-nvblox]
-isaac_ros_nvblox_benchmark:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-nvblox-benchmark]
-    jammy: [ros-humble-isaac-ros-nvblox-benchmark]
-    noble: [ros-jazzy-isaac-ros-nvblox-benchmark]
 isaac_ros_nvblox_nova_benchmark:
   ubuntu:
     focal: [ros-humble-isaac-ros-nvblox-nova-benchmark]
@@ -4209,11 +4033,6 @@ isaac_ros_occupancy_map_builder:
     focal: [ros-humble-isaac-ros-occupancy-map-builder]
     jammy: [ros-humble-isaac-ros-occupancy-map-builder]
     noble: [ros-jazzy-isaac-ros-occupancy-map-builder]
-isaac_ros_owl:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-owl]
-    jammy: [ros-humble-isaac-ros-owl]
-    noble: [ros-jazzy-isaac-ros-owl]
 isaac_ros_peoplenet_models_install:
   ubuntu:
     focal: [ros-humble-isaac-ros-peoplenet-models-install]
@@ -4224,26 +4043,6 @@ isaac_ros_peoplesemseg_models_install:
     focal: [ros-humble-isaac-ros-peoplesemseg-models-install]
     jammy: [ros-humble-isaac-ros-peoplesemseg-models-install]
     noble: [ros-jazzy-isaac-ros-peoplesemseg-models-install]
-isaac_ros_perceptor_bringup:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-perceptor-bringup]
-    jammy: [ros-humble-isaac-ros-perceptor-bringup]
-    noble: [ros-jazzy-isaac-ros-perceptor-bringup]
-isaac_ros_perceptor_nova_benchmark:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-perceptor-nova-benchmark]
-    jammy: [ros-humble-isaac-ros-perceptor-nova-benchmark]
-    noble: [ros-jazzy-isaac-ros-perceptor-nova-benchmark]
-isaac_ros_perceptor_python_utils:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-perceptor-python-utils]
-    jammy: [ros-humble-isaac-ros-perceptor-python-utils]
-    noble: [ros-jazzy-isaac-ros-perceptor-python-utils]
-isaac_ros_pod_recording:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-pod-recording]
-    jammy: [ros-humble-isaac-ros-pod-recording]
-    noble: [ros-jazzy-isaac-ros-pod-recording]
 isaac_ros_pointcloud_interfaces:
   ubuntu:
     focal: [ros-humble-isaac-ros-pointcloud-interfaces]
@@ -4350,11 +4149,6 @@ isaac_ros_segment_anything2_interfaces:
     focal: [ros-humble-isaac-ros-segment-anything2-interfaces]
     jammy: [ros-humble-isaac-ros-segment-anything2-interfaces]
     noble: [ros-jazzy-isaac-ros-segment-anything2-interfaces]
-isaac_ros_segway_rmp:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-segway-rmp]
-    jammy: [ros-humble-isaac-ros-segway-rmp]
-    noble: [ros-jazzy-isaac-ros-segway-rmp]
 isaac_ros_sipl_camera:
   ubuntu:
     noble: [ros-jazzy-isaac-ros-sipl-camera]
@@ -4416,6 +4210,12 @@ isaac_ros_triton_benchmark:
     focal: [ros-humble-isaac-ros-triton-benchmark]
     jammy: [ros-humble-isaac-ros-triton-benchmark]
     noble: [ros-jazzy-isaac-ros-triton-benchmark]
+isaac_ros_unitree_g1_gr00t:
+  ubuntu:
+    noble: [ros-jazzy-isaac-ros-unitree-g1-gr00t]
+isaac_ros_unitree_g1_recorder:
+  ubuntu:
+    noble: [ros-jazzy-isaac-ros-unitree-g1-recorder]
 isaac_ros_unitree_g1_teleop_bringup:
   ubuntu:
     noble: [ros-jazzy-isaac-ros-unitree-g1-teleop-bringup]
@@ -4429,6 +4229,9 @@ isaac_ros_unet_benchmark:
     focal: [ros-humble-isaac-ros-unet-benchmark]
     jammy: [ros-humble-isaac-ros-unet-benchmark]
     noble: [ros-jazzy-isaac-ros-unet-benchmark]
+isaac_ros_unet_kernels:
+  ubuntu:
+    noble: [ros-jazzy-isaac-ros-unet-kernels]
 isaac_ros_ur5_cumotion_benchmark:
   ubuntu:
     focal: [ros-humble-isaac-ros-ur5-cumotion-benchmark]
@@ -4468,11 +4271,6 @@ isaac_ros_visual_slam:
     focal: [ros-humble-isaac-ros-visual-slam]
     jammy: [ros-humble-isaac-ros-visual-slam]
     noble: [ros-jazzy-isaac-ros-visual-slam]
-isaac_ros_visual_slam_benchmark:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-visual-slam-benchmark]
-    jammy: [ros-humble-isaac-ros-visual-slam-benchmark]
-    noble: [ros-jazzy-isaac-ros-visual-slam-benchmark]
 isaac_ros_visual_slam_interfaces:
   ubuntu:
     focal: [ros-humble-isaac-ros-visual-slam-interfaces]
@@ -4481,31 +4279,6 @@ isaac_ros_visual_slam_interfaces:
 isaac_ros_vpi_utils:
   ubuntu:
     noble: [ros-jazzy-isaac-ros-vpi-utils]
-isaac_ros_wifi_common:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-wifi-common]
-    jammy: [ros-humble-isaac-ros-wifi-common]
-    noble: [ros-jazzy-isaac-ros-wifi-common]
-isaac_ros_wifi_localizer:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-wifi-localizer]
-    jammy: [ros-humble-isaac-ros-wifi-localizer]
-    noble: [ros-jazzy-isaac-ros-wifi-localizer]
-isaac_ros_wifi_mapping:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-wifi-mapping]
-    jammy: [ros-humble-isaac-ros-wifi-mapping]
-    noble: [ros-jazzy-isaac-ros-wifi-mapping]
-isaac_ros_wifi_scan:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-wifi-scan]
-    jammy: [ros-humble-isaac-ros-wifi-scan]
-    noble: [ros-jazzy-isaac-ros-wifi-scan]
-isaac_ros_wifi_scan_interfaces:
-  ubuntu:
-    focal: [ros-humble-isaac-ros-wifi-scan-interfaces]
-    jammy: [ros-humble-isaac-ros-wifi-scan-interfaces]
-    noble: [ros-jazzy-isaac-ros-wifi-scan-interfaces]
 isaac_ros_yolov8:
   ubuntu:
     focal: [ros-humble-isaac-ros-yolov8]
@@ -6380,41 +6153,6 @@ nodl_to_policy:
     focal: [ros-humble-nodl-to-policy]
     jammy: [ros-humble-nodl-to-policy]
     noble: [ros-jazzy-nodl-to-policy]
-nova_carter_bringup:
-  ubuntu:
-    focal: [ros-humble-nova-carter-bringup]
-    jammy: [ros-humble-nova-carter-bringup]
-    noble: [ros-jazzy-nova-carter-bringup]
-nova_carter_description:
-  ubuntu:
-    focal: [ros-humble-nova-carter-description]
-    jammy: [ros-humble-nova-carter-description]
-    noble: [ros-jazzy-nova-carter-description]
-nova_carter_docking:
-  ubuntu:
-    focal: [ros-humble-nova-carter-docking]
-    jammy: [ros-humble-nova-carter-docking]
-    noble: [ros-jazzy-nova-carter-docking]
-nova_carter_example_data:
-  ubuntu:
-    focal: [ros-humble-nova-carter-example-data]
-    jammy: [ros-humble-nova-carter-example-data]
-    noble: [ros-jazzy-nova-carter-example-data]
-nova_carter_navigation:
-  ubuntu:
-    focal: [ros-humble-nova-carter-navigation]
-    jammy: [ros-humble-nova-carter-navigation]
-    noble: [ros-jazzy-nova-carter-navigation]
-nova_developer_kit_bringup:
-  ubuntu:
-    focal: [ros-humble-nova-developer-kit-bringup]
-    jammy: [ros-humble-nova-developer-kit-bringup]
-    noble: [ros-jazzy-nova-developer-kit-bringup]
-nova_developer_kit_description:
-  ubuntu:
-    focal: [ros-humble-nova-developer-kit-description]
-    jammy: [ros-humble-nova-developer-kit-description]
-    noble: [ros-jazzy-nova-developer-kit-description]
 novatel_gps_msgs:
   ubuntu:
     focal: [ros-humble-novatel-gps-msgs]
@@ -6741,11 +6479,6 @@ ouxt_lint_common:
     focal: [ros-humble-ouxt-lint-common]
     jammy: [ros-humble-ouxt-lint-common]
     noble: [ros-jazzy-ouxt-lint-common]
-owl_description:
-  ubuntu:
-    focal: [ros-humble-owl-description]
-    jammy: [ros-humble-owl-description]
-    noble: [ros-jazzy-owl-description]
 pal_gazebo_worlds:
   ubuntu:
     focal: [ros-humble-pal-gazebo-worlds]
@@ -6801,11 +6534,6 @@ pal_statistics_msgs_dbgsym:
     focal: [ros-humble-pal-statistics-msgs-dbgsym]
     jammy: [ros-humble-pal-statistics-msgs-dbgsym]
     noble: [ros-jazzy-pal-statistics-msgs-dbgsym]
-pandar_xt32_description:
-  ubuntu:
-    focal: [ros-humble-pandar-xt32-description]
-    jammy: [ros-humble-pandar-xt32-description]
-    noble: [ros-jazzy-pandar-xt32-description]
 parameter_traits:
   ubuntu:
     focal: [ros-humble-parameter-traits]
@@ -7495,9 +7223,18 @@ python3-gdown:
 python3-hdbscan-pip-shim:
   ubuntu:
     noble: [python3-hdbscan-pip-shim]
+python3-hydra-core-pip-shim:
+  ubuntu:
+    noble: [python3-hydra-core-pip-shim]
+python3-iopath-pip-shim:
+  ubuntu:
+    noble: [python3-iopath-pip-shim]
 python3-isaacteleop-pip-shim:
   ubuntu:
     noble: [python3-isaacteleop-pip-shim]
+python3-lerobot-pip-shim:
+  ubuntu:
+    noble: [python3-lerobot-pip-shim]
 python3-libnvinfer:
   ubuntu:
     noble: [python3-libnvinfer]
@@ -7510,6 +7247,9 @@ python3-libnvinfer-dispatch:
 python3-libnvinfer-lean:
   ubuntu:
     noble: [python3-libnvinfer-lean]
+python3-numpy-pip-shim:
+  ubuntu:
+    noble: [python3-numpy-pip-shim]
 python3-onnx-pip-shim:
   ubuntu:
     noble: [python3-onnx-pip-shim]
@@ -7519,6 +7259,12 @@ python3-onnxscript-pip-shim:
 python3-paho-mqtt-pip-shim:
   ubuntu:
     noble: [python3-paho-mqtt-pip-shim]
+python3-pillow-pip-shim:
+  ubuntu:
+    noble: [python3-pillow-pip-shim]
+python3-pyarrow-pip-shim:
+  ubuntu:
+    noble: [python3-pyarrow-pip-shim]
 python3-pydantic-pip:
   ubuntu:
     focal: &id003
@@ -7526,9 +7272,6 @@ python3-pydantic-pip:
         packages: [pydantic]
     jammy: *id003
     noble: *id003
-python3-pydantic-pip-shim:
-  ubuntu:
-    noble: [python3-pydantic-pip-shim]
 python3-pymupdf:
   ubuntu:
     focal: [python3-fitz]
@@ -7547,12 +7290,18 @@ python3-pytransform3d-pip-shim:
 python3-rosbags-pip-shim:
   ubuntu:
     noble: [python3-rosbags-pip-shim]
+python3-sam2-pip-shim:
+  ubuntu:
+    noble: [python3-sam2-pip-shim]
 python3-setuptools-scm-pip-shim:
   ubuntu:
     noble: [python3-setuptools-scm-pip-shim]
 python3-torch-pip-shim:
   ubuntu:
     noble: [python3-torch-pip-shim]
+python3-torchvision-pip-shim:
+  ubuntu:
+    noble: [python3-torchvision-pip-shim]
 python3-rsl-rl-lib-pip-shim:
   ubuntu:
     noble: [python3-rsl-rl-lib-pip-shim]
@@ -8652,11 +8401,6 @@ roboeval_interfaces:
     focal: [ros-humble-roboeval-interfaces]
     jammy: [ros-humble-roboeval-interfaces]
     noble: [ros-jazzy-roboeval-interfaces]
-roboeval_runner:
-  ubuntu:
-    focal: [ros-humble-roboeval-runner]
-    jammy: [ros-humble-roboeval-runner]
-    noble: [ros-jazzy-roboeval-runner]
 roboeval_utils:
   ubuntu:
     focal: [ros-humble-roboeval-utils]
@@ -9437,11 +9181,6 @@ rplidar_ros_dbgsym:
     focal: [ros-humble-rplidar-ros-dbgsym]
     jammy: [ros-humble-rplidar-ros-dbgsym]
     noble: [ros-jazzy-rplidar-ros-dbgsym]
-rplidar_s2e_description:
-  ubuntu:
-    focal: [ros-humble-rplidar-s2e-description]
-    jammy: [ros-humble-rplidar-s2e-description]
-    noble: [ros-jazzy-rplidar-s2e-description]
 rpyutils:
   ubuntu:
     focal: [ros-humble-rpyutils]
@@ -11393,6 +11132,9 @@ unitree_g1_bringup:
 unitree_g1_description:
   ubuntu:
     noble: [ros-jazzy-unitree-g1-description]
+unitree_g1_gr00t_tests:
+  ubuntu:
+    noble: [ros-jazzy-unitree-g1-gr00t-tests]
 unitree_g1_ros2_control:
   ubuntu:
     noble: [ros-jazzy-unitree-g1-ros2-control]
@@ -11486,6 +11228,27 @@ ur_robot_driver_dbgsym:
     focal: [ros-humble-ur-robot-driver-dbgsym]
     jammy: [ros-humble-ur-robot-driver-dbgsym]
     noble: [ros-jazzy-ur-robot-driver-dbgsym]
+flexiv_description:
+  ubuntu:
+    noble: [ros-jazzy-flexiv-description]
+flexiv_gripper:
+  ubuntu:
+    noble: [ros-jazzy-flexiv-gripper]
+flexiv_moveit_config:
+  ubuntu:
+    noble: [ros-jazzy-flexiv-moveit-config]
+flexiv_bringup:
+  ubuntu:
+    noble: [ros-jazzy-flexiv-bringup]
+flexiv_controllers:
+  ubuntu:
+    noble: [ros-jazzy-flexiv-controllers]
+flexiv_hardware:
+  ubuntu:
+    noble: [ros-jazzy-flexiv-hardware]
+flexiv_msgs:
+  ubuntu:
+    noble: [ros-jazzy-flexiv-msgs]
 urdf:
   ubuntu:
     focal: [ros-humble-urdf]

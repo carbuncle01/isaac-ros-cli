@@ -1,3 +1,11 @@
+isaac-ros-cli (2.4.0-1) noble; urgency=low
+
+  * Add config schema validation, command-line overrides, and the `isaac-ros status` command.
+  * Improve Docker activation, `run_dev` image build lifecycle handling, and BuildKit scheduling.
+  * Refresh pip shim constraints, rosdep mappings, apt repository selection, and Docker image definitions for Isaac ROS 4.5.
+
+ -- Isaac ROS Maintainers <isaac-ros-maintainers@nvidia.com>  Mon, 6 Jul 2026 12:00:00 +0000
+
 isaac-ros-cli (2.3.0-1) noble; urgency=low
 
   * Refresh pip shim constraints, including PyYAML, SciPy, and tensordict.

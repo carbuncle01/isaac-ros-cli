@@ -1,4 +1,4 @@
-# Copyright (c) 2025, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2025-2026, NVIDIA CORPORATION. All rights reserved.
 #
 # NVIDIA CORPORATION and its licensors retain all intellectual property
 # and proprietary rights in and to this software, related documentation
@@ -9,11 +9,20 @@
 import os
 import subprocess
 import sys
+
 import click
 
-from isaac_ros_cli.config_loader import update_environment_mode
+from isaac_ros_cli.config import update_environment_mode
+from isaac_ros_cli.runtime_state import get_active_context
 
 ISAAC_ROS_GROUP_NAME = "isaac-ros-cli"
+
+
+def _is_interactive_terminal() -> bool:
+    """Return True when stdin and stderr are connected to a TTY."""
+    return bool(getattr(sys.stdin, "isatty", lambda: False)()) and bool(
+        getattr(sys.stderr, "isatty", lambda: False)()
+    )
 
 
 @click.command()
@@ -37,23 +46,44 @@ def init(environment, yes):
         click.echo("Please rerun with sudo.", err=True)
         sys.exit(1)
 
-    # Baremetal requires explicit acknowledgment due to system package risks
-    if environment == 'baremetal' and not yes and not click.confirm(
-        """
-        You selected 'baremetal' mode.
-
-        In this mode, pip installs will run against the system Python with the flag:
-        \t\t--break-system-packages
-
-        This can overwrite or remove distro-managed files and may break your system.
-
-        Proceed and configure Isaac ROS CLI to use 'baremetal' mode?
-        """,
-        default=False,
-        err=True
-    ):
-        click.echo("Aborted. No changes made.", err=True)
+    active_context = get_active_context()
+    if active_context is not None:
+        click.echo(
+            "Error: Isaac ROS CLI cannot be reconfigured from an activated environment.",
+            err=True,
+        )
+        click.echo(
+            "Exit the current Isaac ROS shell and rerun 'isaac-ros init' from a clean host shell.",
+            err=True,
+        )
         sys.exit(1)
+
+    # Baremetal requires explicit acknowledgment due to system package risks
+    if environment == 'baremetal' and not yes:
+        if not _is_interactive_terminal():
+            click.echo(
+                "Error: Non-interactive session detected for baremetal mode. "
+                "Re-run with --yes to acknowledge risks.",
+                err=True,
+            )
+            sys.exit(1)
+
+        if not click.confirm(
+            """
+            You selected 'baremetal' mode.
+
+            In this mode, pip installs will run against the system Python with the flag:
+            \t\t--break-system-packages
+
+            This can overwrite or remove distro-managed files and may break your system.
+
+            Proceed and configure Isaac ROS CLI to use 'baremetal' mode?
+            """,
+            default=False,
+            err=True
+        ):
+            click.echo("Aborted. No changes made.", err=True)
+            sys.exit(1)
 
     # Add user to venv-owning group if in venv mode
     if environment == 'venv':

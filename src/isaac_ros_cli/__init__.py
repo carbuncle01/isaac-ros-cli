@@ -8,20 +8,22 @@
 
 """Isaac ROS CLI package."""
 
-from .config_loader import (
-    ConfigScope,
-    load_environment_mode,
-    update_environment_mode,
-    load_config,
-    update_config,
-)
 from .cli import main
+from .config import (
+    ConfigScope,
+    load_config,
+    load_environment_mode,
+    parse_config_override,
+    update_config,
+    update_environment_mode,
+)
 
 __all__ = [
     'ConfigScope',
-    'load_environment_mode',
-    'update_environment_mode',
     'load_config',
+    'load_environment_mode',
+    'parse_config_override',
     'update_config',
+    'update_environment_mode',
     'main',
 ]
