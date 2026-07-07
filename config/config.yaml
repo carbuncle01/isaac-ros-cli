@@ -13,3 +13,9 @@ docker:
     platform: auto
     use_cached_build_image: false
 
+apt:
+  key_url: https://isaac.download.nvidia.com/isaac-ros/repos.key
+  repository: https://isaac.download.nvidia.com/isaac-ros/release-4.5
+  distro: noble
+  components:
+    - main

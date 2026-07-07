@@ -5,8 +5,6 @@
 # and any modifications thereto.  Any use, reproduction, disclosure or
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
-#
-# All-in-one image for Isaac ROS development
 
 FROM nvcr.io/nvidia/base/ubuntu:noble-20251013
 
@@ -38,16 +36,27 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         udev \
         wget
 
-ARG ISAAC_DEBIAN_COMPONENTS="main external-main"
+# Isaac ROS apt repository configuration
+ARG ISAAC_DEBIAN_KEY_URL="https://isaac.download.nvidia.com/isaac-ros/repos.key"
+ARG ISAAC_DEBIAN_REPOSITORY="https://isaac.download.nvidia.com/isaac-ros/release-4.5"
+ARG ISAAC_DEBIAN_DIST=""
+ARG ISAAC_DEBIAN_COMPONENTS="main"
 ARG ISAAC_DEBIAN_DISTRO_SUFFIX=""
+
+# isaac-ros-cli configuration (override via --build-arg in CI)
+ARG ISAAC_ROS_PLATFORM=""
 
 # Set up Isaac ROS apt repository
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     k="/usr/share/keyrings/nvidia-isaac-ros.gpg" \
-    && curl -fsSL https://isaac.download.nvidia.com/isaac-ros/repos.key | gpg --dearmor | tee -a $k > /dev/null \
+    && curl -fsSL "${ISAAC_DEBIAN_KEY_URL}" | gpg --dearmor | tee -a $k > /dev/null \
     && f="/etc/apt/sources.list.d/nvidia-isaac-ros.list" \
     && touch $f \
-    && s="deb [signed-by=$k] https://isaac.download.nvidia.com/isaac-ros/release-4.4 $(lsb_release -cs)${ISAAC_DEBIAN_DISTRO_SUFFIX} ${ISAAC_DEBIAN_COMPONENTS}" \
+    && d="${ISAAC_DEBIAN_DIST:-$(lsb_release -cs)}" \
+    && if [[ -n "${ISAAC_DEBIAN_DISTRO_SUFFIX}" && "${d}" != *"${ISAAC_DEBIAN_DISTRO_SUFFIX}" ]]; then \
+        d="${d}${ISAAC_DEBIAN_DISTRO_SUFFIX}"; \
+    fi \
+    && s="deb [signed-by=$k] ${ISAAC_DEBIAN_REPOSITORY} ${d} ${ISAAC_DEBIAN_COMPONENTS}" \
     && (grep -qxF "$s" $f || echo "$s" | tee -a $f) \
     && apt-get update
 
@@ -103,10 +112,31 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && echo "yaml file:///etc/ros/rosdep/sources.list.d/nvidia-isaac.yaml" | tee /etc/ros/rosdep/sources.list.d/00-nvidia-isaac.list \
     && rosdep update
 
-# Install isaac-ros-cli
+# Install Isaac ROS CLI. Source builds can stage one local Debian package in
+# .docker-deb-overrides/; packaged and public rebuilds install it from apt.
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    apt-get update && \
-    apt-get install -y isaac-ros-cli
+    --mount=type=bind,source=.,target=/opt/isaac-ros-cli-context,readonly \
+    set -e \
+    && shopt -s nullglob \
+    && local_debs=(/opt/isaac-ros-cli-context/.docker-deb-overrides/isaac-ros-cli_*.deb) \
+    && if (( ${#local_debs[@]} > 1 )); then \
+        printf 'Expected at most one local isaac-ros-cli Debian, found %s\n' "${#local_debs[@]}" >&2; \
+        exit 1; \
+    elif (( ${#local_debs[@]} == 1 )); then \
+        printf '\nWARNING: Installing local Isaac ROS CLI Debian override:\n  %s\n' "${local_debs[0]}"; \
+        printf 'Package version: '; dpkg-deb -f "${local_debs[0]}" Version; \
+        printf 'sha256: '; sha256sum "${local_debs[0]}"; \
+        cp "${local_debs[0]}" /tmp/isaac-ros-cli.deb; \
+        apt-get update; \
+        ISAAC_ROS_PLATFORM="${ISAAC_ROS_PLATFORM}" \
+            apt-get install -y /tmp/isaac-ros-cli.deb; \
+        rm /tmp/isaac-ros-cli.deb; \
+    else \
+        printf 'Installing isaac-ros-cli from configured apt repositories.\n'; \
+        apt-get update; \
+        ISAAC_ROS_PLATFORM="${ISAAC_ROS_PLATFORM}" \
+            apt-get install -y isaac-ros-cli; \
+    fi
 
 # Override Isaac ROS CLI environment configuration
 COPY docker/patches/docker-environment.conf /etc/isaac-ros-cli/environment.conf

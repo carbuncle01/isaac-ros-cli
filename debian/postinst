@@ -9,8 +9,19 @@
 
 set -e
 
+DOCKER_DEB_OVERRIDE_DIR="/etc/isaac-ros-cli/.docker-deb-overrides"
+
+clear_docker_deb_overrides() {
+    if [ -d "$DOCKER_DEB_OVERRIDE_DIR" ]; then
+        rm -rf "$DOCKER_DEB_OVERRIDE_DIR"
+        echo "Cleared Isaac ROS CLI Docker Debian overrides from $DOCKER_DEB_OVERRIDE_DIR"
+    fi
+}
+
 case "$1" in
     configure)
+        clear_docker_deb_overrides
+
         echo "Creating Isaac ROS virtual environment..."
 
         # Check if python3 is available

@@ -1,0 +1,20 @@
+#####################################################################################
+# Copyright (c) 2026, NVIDIA CORPORATION. All rights reserved.
+# NVIDIA CORPORATION and its licensors retain all intellectual property
+# and proprietary rights in and to this software, related documentation
+# and any modifications thereto. Any use, reproduction, disclosure or
+# distribution of this software and related documentation without an express
+# license agreement from NVIDIA CORPORATION is strictly prohibited.
+#####################################################################################
+
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
+        ros-jazzy-isaac-ros-unitree-g1-gr00t \
+        ros-jazzy-isaac-ros-unitree-g1-recorder \
+        ros-jazzy-isaac-ros-unitree-g1-teleop-bringup \
+        ros-jazzy-mujoco-ros2-control \
+        ros-jazzy-realsense2-camera \
+        ros-jazzy-realsense2-camera-msgs

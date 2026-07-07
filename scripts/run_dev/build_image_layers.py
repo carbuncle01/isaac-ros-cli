@@ -10,13 +10,13 @@
 import argparse
 import hashlib
 import os
+from pathlib import Path
 import platform
 import re
 import subprocess
+import sys
 import tempfile
 import time
-import sys
-from pathlib import Path
 from typing import Dict, List, Tuple
 
 import termcolor
@@ -156,6 +156,20 @@ def redact_bake_hcl(hcl_text: str) -> str:
     for pattern, replacement in redactions:
         redacted = re.sub(pattern, replacement, redacted)
     return redacted
+
+
+def parse_build_args(build_args: List[str] | None = None) -> Dict[str, str]:
+    parsed_args = {}
+    if not build_args:
+        return parsed_args
+    for arg in build_args:
+        if '=' not in arg:
+            raise ValueError(f"Invalid build arg '{arg}': expected KEY=VALUE.")
+        key, value = arg.split('=', 1)
+        if not key:
+            raise ValueError(f"Invalid build arg '{arg}': key cannot be empty.")
+        parsed_args[key] = value
+    return parsed_args
 
 
 # -----------------------------------------------------------------------------
@@ -311,6 +325,16 @@ class Config:
 
 
 class Dockerfile:
+    EXTRA_HASH_INPUTS = {
+        "isaac_ros": [
+            # Same file from the two context roots used for Dockerfile.isaac_ros.
+            # Only existing paths are hashed.
+            Path("docker/rosdep/extra_rosdeps.yaml"),
+            Path(".docker-deb-overrides/isaac-ros-cli_*.deb"),
+            Path("rosdep/extra_rosdeps.yaml"),
+        ],
+    }
+
     def __init__(self, dockerfile_path: Path, context_dir: Path, image_key: ImageKey):
         self.dockerfile_path_ = dockerfile_path
         self.context_dir_ = context_dir
@@ -318,9 +342,26 @@ class Dockerfile:
         self.md5_hash_ = None
         print(f'Dockerfile created: image_key = {image_key}')
 
+    def hash_input_paths(self) -> List[Path]:
+        paths = [self.dockerfile_path_]
+        for extra_path in self.EXTRA_HASH_INPUTS.get(self.image_key(), []):
+            for input_path in sorted(self.context_dir_.glob(str(extra_path))):
+                if not input_path.is_file():
+                    continue
+                paths.append(input_path)
+        return paths
+
     def md5_hash(self) -> str:
         if not self.md5_hash_:
-            self.md5_hash_ = calculate_md5(self.dockerfile_path_)
+            input_paths = self.hash_input_paths()
+            if len(input_paths) == 1:
+                self.md5_hash_ = calculate_md5(input_paths[0])
+                return self.md5_hash_
+
+            hash_md5 = hashlib.md5()
+            for input_path in input_paths:
+                hash_md5.update(calculate_md5(input_path).encode())
+            self.md5_hash_ = hash_md5.hexdigest()
         return self.md5_hash_
 
     def target_name(self) -> str:
@@ -342,20 +383,23 @@ class ImageBuildPlan:
         self.image_key_ = image_key
         self.build_variables_ = {}
 
+    def subplan(self, dockerfiles: List[Dockerfile]):
+        subplan = ImageBuildPlan(dockerfiles)
+        subplan.build_variables_ = dict(self.build_variables_)
+        return subplan
+
     def md5hash(self) -> str:
-        tmp_file = "/tmp/dockerhash.tmp"
-        subprocess.getoutput(f'rm -Rf {tmp_file}')
-        subprocess.getoutput(f'touch {tmp_file}')
+        hash_md5 = hashlib.md5()
         for d in sorted(self.dockerfiles_, key=lambda x: x.image_key()):
-            individual_hash = subprocess.getoutput(
-                f"md5sum {d.dockerfile_path_}").partition(' ')[0]
-            subprocess.getoutput(f"echo {individual_hash} >> {tmp_file}")
-        hash_value = subprocess.getoutput(f"md5sum {tmp_file}").partition(' ')[0]
-        return hash_value
+            individual_hash = d.md5_hash()
+            hash_md5.update(f"{individual_hash}\n".encode())
+        for key, value in sorted(self.build_variables_.items()):
+            hash_md5.update(f"{key}={value}\n".encode())
+        return hash_md5.hexdigest()
 
     def target_names(self):
         return [
-            ImageBuildPlan(self.dockerfiles_[:i+1]).target_name()
+            self.subplan(self.dockerfiles_[:i+1]).target_name()
             for i in range(len(self.dockerfiles_))
         ]
 
@@ -379,7 +423,8 @@ class ImageBuildPlan:
         nvcr_tag=False,
         s3_cache_config=None,
         use_kubernetes_driver=False,
-        isaac_ros_platform=None
+        isaac_ros_platform=None,
+        include_layer_depends_on=True
     ):
         """
         Generate a dictionary representing the docker buildx bake configuration.
@@ -396,6 +441,9 @@ class ImageBuildPlan:
         :param isaac_ros_platform: Isaac ROS platform identifier
             (e.g. 'amd64', 'arm64-jetpack', 'arm64-fastos').
             Defaults to file_arch for backward compatibility.
+        :param include_layer_depends_on: Include bake depends_on edges between
+            generated layer targets. Disable this when previous layers are
+            expected to be pulled from the registry instead of rebuilt locally.
         """
         build_plan = {}
         nvcr_url = "nvcr.io/nvidia/isaac/ros"
@@ -431,7 +479,7 @@ class ImageBuildPlan:
             print("Warning: S3 cache configured but AWS credentials missing. Skipping S3 cache.")
 
         def get_target(dockerfiles: List[Dockerfile]):
-            return ImageBuildPlan(dockerfiles).target_name()
+            return self.subplan(dockerfiles).target_name()
 
         build_plan['targets'] = {}
         targets = build_plan['targets']
@@ -460,7 +508,7 @@ class ImageBuildPlan:
                 region = s3_cache_config.get('region')
                 # Use hashless target name + arch to allow reuse of layers across builds/commits
                 # while avoiding architecture collisions.
-                hashless_name = ImageBuildPlan(dockerfile_list[:i+1]).hashless_target_name()
+                hashless_name = self.subplan(dockerfile_list[:i+1]).hashless_target_name()
                 cache_name = f"{hashless_name}-{file_arch}"
 
                 s3_opts = "type=s3"
@@ -484,7 +532,7 @@ class ImageBuildPlan:
                 if base_image is not None:
                     target_dict['args']['BASE_IMAGE'] = base_image
             else:
-                depends_name = ImageBuildPlan(dockerfile_list[:i]).target_name()
+                depends_name = self.subplan(dockerfile_list[:i]).target_name()
                 target_dict['tags'] = [
                     f"{cache_from_registry}/{target_name}-{isaac_ros_platform}:latest"
                 ]
@@ -494,7 +542,8 @@ class ImageBuildPlan:
                         f"{cache_from_registry}/{depends_name}-{isaac_ros_platform}:latest"
                     )
                 })
-                target_dict['depends_on'] = [f"{get_target(dockerfile_list[:i])}"]
+                if include_layer_depends_on:
+                    target_dict['depends_on'] = [f"{get_target(dockerfile_list[:i])}"]
             if nvcr_tag:
                 target_dict['tags'].append(
                     f"{nvcr_url}:{target_name}-{isaac_ros_platform}"
@@ -646,11 +695,17 @@ def countdown_warning(message, seconds=5):
             time.sleep(1)
         print("\n")
     except KeyboardInterrupt:
-        print("\nBuild cancelled.")
+        print("\nBuild canceled.")
         sys.exit(1)
 
 
-def get_image_name(cache_from_registry_name, env_list, isaac_ros_platform, include_hash=False):
+def get_image_name(
+    cache_from_registry_name,
+    env_list,
+    isaac_ros_platform,
+    include_hash=False,
+    build_args: List[str] = None
+):
     """Get the full image name for a given environment list and platform.
 
     Args:
@@ -659,6 +714,7 @@ def get_image_name(cache_from_registry_name, env_list, isaac_ros_platform, inclu
         isaac_ros_platform (str): Isaac ROS platform identifier
             (e.g. 'amd64', 'arm64-jetpack', 'arm64-fastos')
         include_hash (bool): Whether to include the hash in the image name
+        build_args (List[str]): Build arguments that affect image contents
 
     Returns:
         str: Full image name including registry, environment components,
@@ -682,6 +738,8 @@ def get_image_name(cache_from_registry_name, env_list, isaac_ros_platform, inclu
         config.docker_search_dirs_,
         context_overrides=config.context_overrides_
     )
+    if build_plan:
+        build_plan.build_variables_.update(parse_build_args(build_args))
 
     if include_hash:
         if build_plan:
@@ -719,7 +777,9 @@ def main(image_key_set: List[str],
          build_local: bool = False,
          push: bool = False,
          use_kubernetes_driver: bool = False,
-         isaac_ros_platform: str = None):
+         isaac_ros_platform: str | None = None,
+         leaf_only: bool = False,
+         include_layer_depends_on: bool = True):
 
     platform_ = platform_ if platform_ else platform.uname().machine
 
@@ -736,11 +796,7 @@ def main(image_key_set: List[str],
         config.docker_search_dirs_.insert(0, config.context_dir_)
 
     # Process extra build args (expected as KEY=VALUE strings)
-    if build_args:
-        for arg in build_args:
-            if '=' in arg:
-                key, value = arg.split('=', 1)
-                config.build_args_[key] = value
+    config.build_args_.update(parse_build_args(build_args))
 
     print(config.__dict__)
     image_key = ImageKey.from_key_set(image_key_set, key_order=config.image_key_order_)
@@ -754,6 +810,7 @@ def main(image_key_set: List[str],
     if not build_plan:
         print("Error: Could not resolve all Dockerfiles.")
         exit(1)
+    build_plan.build_variables_.update(config.build_args_)
     for d in build_plan.dockerfiles_:
         print(f'Dockerfile: {d}')
     print('\n')
@@ -780,12 +837,17 @@ def main(image_key_set: List[str],
         s3_cache_config=config.s3_cache_,
         use_kubernetes_driver=use_kubernetes_driver,
         isaac_ros_platform=isaac_ros_platform,
+        include_layer_depends_on=include_layer_depends_on,
     )
     docker_bake = ImageBuildPlan.as_hcl_str(docker_bake_dict)
     print(redact_bake_hcl(docker_bake))
 
+    target_names = build_plan.target_names()
+    if leaf_only and target_names:
+        target_names = [target_names[-1]]
+
     build_target_names = []
-    for target_name in build_plan.target_names():
+    for target_name in target_names:
         target = docker_bake_dict['targets'][target_name]
         tag = target['tags'][0]
         if (not skip_registry_check) and (check_docker_image_exists(tag) and not no_cache):
@@ -821,18 +883,27 @@ def main(image_key_set: List[str],
             if not build_local and use_kubernetes_driver:
                 # Use Kubernetes driver - deploys BuildKit pods on-demand in cluster
                 print("Using Kubernetes driver (bypasses NLB, fixes EOF errors)")
-                k8s_arch = "amd64" if config.platform_ in ["x86_64", "amd64"] else "arm64"
+                if config.platform_ in ["x86_64", "amd64"]:
+                    k8s_arch = "amd64"
+                    k8s_nodegroup = "x86-node-group-xl-v3"
+                else:
+                    k8s_arch = "arm64"
+                    k8s_nodegroup = "arm-node-group-xl-v3"
+                k8s_nodeselector = (
+                    f'kubernetes.io/arch={k8s_arch},'
+                    f'eks.amazonaws.com/nodegroup={k8s_nodegroup}'
+                )
                 run_shell(
                     f'docker buildx create --driver kubernetes --name {builder_name} '
                     f'--driver-opt namespace=docker-builder '
-                    f'--driver-opt nodeselector=kubernetes.io/arch={k8s_arch} '
+                    f'\'--driver-opt="nodeselector={k8s_nodeselector}"\' '
                     f'--driver-opt requests.cpu=4 '
                     f'--driver-opt requests.memory=12Gi '
                     f'--driver-opt requests.ephemeral-storage=64Gi '
                     f'--driver-opt limits.cpu=7500m '
                     f'--driver-opt limits.memory=24Gi '
                     f'--driver-opt limits.ephemeral-storage=128Gi '
-                    f'--driver-opt timeout=5m '
+                    f'--driver-opt timeout=10m '
                     f'--driver-opt "annotations=janitor/ttl=6h" '
                     f'--buildkitd-flags "--oci-worker-snapshotter=native" '
                     f'--bootstrap',
@@ -1022,6 +1093,24 @@ if __name__ == "__main__":
              'Determines the apt distro suffix baked into the image and the image name suffix. '
              'Defaults to coarse file_arch for backward compatibility.'
     )
+    parser.add_argument(
+        '--leaf-only',
+        action="store_true",
+        dest="leaf_only",
+        help="Build only the final resolved layer target instead of every intermediate layer.",
+        default=False
+    )
+    parser.add_argument(
+        '--no-layer-depends-on',
+        action="store_false",
+        dest="include_layer_depends_on",
+        help=(
+            "Do not emit bake depends_on edges between layer targets. "
+            "Use with --leaf-only when prior layers have already been pushed "
+            "and should be pulled from the registry."
+        ),
+        default=True
+    )
 
     args = parser.parse_args()
 
@@ -1049,4 +1138,6 @@ if __name__ == "__main__":
         build_local=args.build_local,
         use_kubernetes_driver=args.use_kubernetes_driver,
         isaac_ros_platform=args.isaac_ros_platform,
+        leaf_only=args.leaf_only,
+        include_layer_depends_on=args.include_layer_depends_on,
     )

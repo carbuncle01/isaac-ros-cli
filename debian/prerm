@@ -9,8 +9,19 @@
 
 set -e
 
+DOCKER_DEB_OVERRIDE_DIR="/etc/isaac-ros-cli/.docker-deb-overrides"
+
+clear_docker_deb_overrides() {
+    if [ -d "$DOCKER_DEB_OVERRIDE_DIR" ]; then
+        rm -rf "$DOCKER_DEB_OVERRIDE_DIR"
+        echo "Cleared Isaac ROS CLI Docker Debian overrides from $DOCKER_DEB_OVERRIDE_DIR"
+    fi
+}
+
 case "$1" in
     remove)
+        clear_docker_deb_overrides
+
         echo "Removing Isaac ROS virtual environment..."
 
         VENV_PATH="/var/lib/isaac-ros-cli/isaac-ros"
@@ -28,6 +39,7 @@ case "$1" in
         ;;
 
     upgrade|deconfigure)
+        clear_docker_deb_overrides
         # Don't remove venv on upgrade, only on actual removal
         ;;
 

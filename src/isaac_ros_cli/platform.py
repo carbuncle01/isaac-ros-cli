@@ -8,8 +8,8 @@
 
 """Isaac ROS platform detection and identification."""
 
-import os
 from enum import Enum
+import os
 from pathlib import Path
 
 
