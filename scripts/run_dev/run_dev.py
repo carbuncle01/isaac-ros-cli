@@ -205,7 +205,7 @@ def make_docker_image_available(base_name, cached_image_name):
 
 def get_existing_bash_configs():
     """Returns a list of existing bash configuration files in the user's home directory."""
-    config_files = ['.bashrc', '.bash_profile', '.profile', '.dircolors']
+    config_files = ['.bash_profile', '.profile', '.dircolors']
     existing_configs = []
     for file in config_files:
         if os.path.isfile(os.path.expanduser(f'~/{file}')):
@@ -213,12 +213,45 @@ def get_existing_bash_configs():
     return existing_configs
 
 
-def get_docker_args(platform):
+def get_workspace_mount_args(isaac_dir):
+    """Mount Isaac ROS sibling directories used by legacy run_dev.sh workflows."""
+    isaac_parent_dir = os.path.dirname(os.path.abspath(isaac_dir))
+    sibling_mounts = {
+        "scripts": "/scripts",
+        "debug": "/debug",
+        "python_ws": "/workspaces/python_ws",
+        "record": "/workspaces/record",
+        "map": "/workspaces/map",
+    }
+
+    docker_args = []
+    for host_name, container_path in sibling_mounts.items():
+        host_path = os.path.join(isaac_parent_dir, host_name)
+        if not os.path.isdir(host_path):
+            os.makedirs(host_path, exist_ok=True)
+            print(f"Created missing workspace support directory at {host_path}")
+        docker_args.append(f"-v {shlex.quote(host_path)}:{container_path}")
+    return docker_args
+
+
+def get_container_workspace_path(isaac_dir):
+    """Return the container-side workspace path for the host Isaac ROS workspace."""
+    workspace_name = os.path.basename(os.path.abspath(isaac_dir))
+    if not workspace_name:
+        workspace_name = "isaac_ros_ws"
+    return f"/workspaces/{workspace_name}"
+
+
+def get_docker_args(platform, container_workspace_path):
     # Return arguments as complete flag-value pairs for shell=True usage
     home_path = os.path.expanduser('~')
     docker_args = [
         "-v /tmp/.X11-unix:/tmp/.X11-unix",
         f"-v {shlex.quote(home_path)}/.Xauthority:/home/admin/.Xauthority:rw",
+        # The development container is already privileged. Bind the host device
+        # tree so USB serial devices, stable udev symlinks, and hot-plugged
+        # devices remain visible inside the container.
+        "-v /dev:/dev",
     ]
     # Add existing bash config files
     for config in get_existing_bash_configs():
@@ -231,10 +264,14 @@ def get_docker_args(platform):
         "-e NVIDIA_DRIVER_CAPABILITIES=all",
         "-e ROS_DOMAIN_ID",
         "-e USER",
-        "-e ISAAC_ROS_WS=/workspaces/isaac_ros-dev",
+        f"-e ISAAC_ROS_WS={shlex.quote(container_workspace_path)}",
+        f"-e ISAAC_DIR={shlex.quote(container_workspace_path)}",
         f"-e HOST_USER_UID={os.getuid()}",
         f"-e HOST_USER_GID={os.getgid()}",
     ])
+    if os.path.isdir("/var/run/dbus"):
+        docker_args.append("-v /var/run/dbus:/var/run/dbus")
+
     if platform == "aarch64":
         if "SSH_AUTH_SOCK" in os.environ:
             ssh_auth_sock = os.environ['SSH_AUTH_SOCK']
@@ -251,8 +288,6 @@ def get_docker_args(platform):
             "-v /usr/src/jetson_sipl_api:/usr/src/jetson_sipl_api",
             "--pid=host",
             "-v /usr/share/vpi3:/usr/share/vpi3",
-            "-v /dev/input:/dev/input",
-            "-v /dev/bus/usb:/dev/bus/usb",
         ])
         # CoE (Camera over Ethernet) device nodes
         for coe_dev in glob.glob("/dev/coe-chan-*"):
@@ -332,7 +367,9 @@ def load_docker_args_from_file():
 
 
 def run_docker_container(args, container_name, base_name, isaac_dir):
-    docker_args = get_docker_args(args.platform)
+    container_workspace_path = get_container_workspace_path(isaac_dir)
+    docker_args = get_docker_args(args.platform, container_workspace_path)
+    docker_args.extend(get_workspace_mount_args(isaac_dir))
     file_args = load_docker_args_from_file()
 
     docker_args.extend(file_args)
@@ -347,7 +384,7 @@ def run_docker_container(args, container_name, base_name, isaac_dir):
         "-e TERM=xterm-256color",
         "-e COLORTERM=truecolor",
         "-e FORCE_COLOR=true",
-        "--workdir /workspaces/isaac_ros-dev",
+        f"--workdir {shlex.quote(container_workspace_path)}",
     ]
 
     # Pass ISAAC_ROS_PLATFORM if specified
@@ -361,7 +398,7 @@ def run_docker_container(args, container_name, base_name, isaac_dir):
 
     # Add remaining arguments
     docker_command_parts.extend([
-        f"-v {shlex.quote(isaac_dir)}:/workspaces/isaac_ros-dev",
+        f"-v {shlex.quote(isaac_dir)}:{shlex.quote(container_workspace_path)}",
         "-v /etc/localtime:/etc/localtime:ro",
         f"--name {shlex.quote(container_name)}",
         "--gpus all",

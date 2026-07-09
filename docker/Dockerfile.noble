@@ -232,9 +232,9 @@ RUN python3 -m pip install --break-system-packages -U \
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 apt-key adv --fetch-key https://repo.download.nvidia.com/jetson/jetson-ota-public.asc ; \
 if [[ ${PLATFORM} == 'arm64' ]]; then \
-    add-apt-repository "deb http://repo.download.nvidia.com/jetson/common r38.2 main" ; \
+    add-apt-repository "deb http://repo.download.nvidia.com/jetson/common r39.2 main" ; \
 elif [[ ${PLATFORM} == 'amd64' ]]; then \
-    add-apt-repository "deb http://repo.download.nvidia.com/jetson/x86_64/noble r38.2 main" ; \
+    add-apt-repository "deb http://repo.download.nvidia.com/jetson/x86_64/noble r39.2 main" ; \
 else \
     echo "Unrecognized platform: ${PLATFORM}" && exit 1 ; \
 fi ; \

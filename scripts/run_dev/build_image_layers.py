@@ -8,11 +8,14 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
 import argparse
+import glob
 import hashlib
+import json
 import os
 from pathlib import Path
 import platform
 import re
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -141,6 +144,146 @@ def calculate_md5(filename):
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
+
+
+def update_hash_from_file(hash_md5, filename):
+    with open(filename, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+
+
+def dockerfile_instruction_lines(dockerfile_path: Path) -> List[str]:
+    """Return Dockerfile instructions with line continuations collapsed."""
+    instructions = []
+    current = ""
+
+    with open(dockerfile_path, "r", encoding="utf-8") as f:
+        for raw_line in f:
+            line = raw_line.rstrip("\n")
+            stripped = line.strip()
+            if not current and (not stripped or stripped.startswith("#")):
+                continue
+
+            if line.rstrip().endswith("\\"):
+                current += line.rstrip()[:-1] + " "
+                continue
+
+            current += line
+            if current.strip():
+                instructions.append(current.strip())
+            current = ""
+
+    if current.strip():
+        instructions.append(current.strip())
+    return instructions
+
+
+def local_copy_add_sources(instruction: str) -> List[str]:
+    """Return local COPY/ADD sources referenced by a Dockerfile instruction."""
+    match = re.match(r"^\s*(COPY|ADD)\s+(.*)$", instruction, flags=re.IGNORECASE)
+    if not match:
+        return []
+
+    remainder = match.group(2).strip()
+    if remainder.startswith("["):
+        try:
+            values = json.loads(remainder)
+        except json.JSONDecodeError:
+            return []
+        if isinstance(values, list) and len(values) >= 2:
+            return [
+                source for source in values[:-1]
+                if isinstance(source, str)
+                and not re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*://", source)
+            ]
+        return []
+
+    try:
+        tokens = shlex.split(instruction, comments=False)
+    except ValueError:
+        return []
+
+    token_index = 1
+    while token_index < len(tokens) and tokens[token_index].startswith("--"):
+        option = tokens[token_index]
+        if option == "--from" or option.startswith("--from="):
+            return []
+        token_index += 1
+
+    args = tokens[token_index:]
+    if len(args) >= 2:
+        return [
+            source for source in args[:-1]
+            if not re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*://", source)
+        ]
+
+    while remainder.startswith("--"):
+        option, _, remainder = remainder.partition(" ")
+        if option == "--from" or option.startswith("--from="):
+            return []
+        remainder = remainder.strip()
+
+    if remainder.startswith("["):
+        try:
+            values = json.loads(remainder)
+        except json.JSONDecodeError:
+            return []
+        if isinstance(values, list) and len(values) >= 2:
+            return [
+                source for source in values[:-1]
+                if isinstance(source, str)
+                and not re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*://", source)
+            ]
+    return []
+
+
+def resolve_context_sources(context_dir: Path, sources: List[str]) -> List[Path]:
+    resolved_paths = []
+    for source in sources:
+        source_path = context_dir / source.lstrip("/")
+        matches = glob.glob(str(source_path), recursive=True)
+        if matches:
+            resolved_paths.extend(Path(match) for match in matches)
+        else:
+            resolved_paths.append(source_path)
+    return resolved_paths
+
+
+def update_hash_from_context_path(hash_md5, path: Path, context_dir: Path):
+    try:
+        relative_path = path.relative_to(context_dir)
+    except ValueError:
+        relative_path = path
+
+    relative_bytes = str(relative_path).encode("utf-8")
+    if path.is_symlink():
+        hash_md5.update(b"L\0")
+        hash_md5.update(relative_bytes + b"\0")
+        hash_md5.update(os.readlink(path).encode("utf-8") + b"\0")
+    elif path.is_file():
+        stat = path.stat()
+        hash_md5.update(b"F\0")
+        hash_md5.update(relative_bytes + b"\0")
+        hash_md5.update(str(stat.st_mode).encode("ascii") + b"\0")
+        update_hash_from_file(hash_md5, path)
+    elif path.is_dir():
+        hash_md5.update(b"D\0")
+        hash_md5.update(relative_bytes + b"\0")
+    else:
+        hash_md5.update(b"M\0")
+        hash_md5.update(relative_bytes + b"\0")
+
+
+def update_hash_from_context_source(hash_md5, source_path: Path, context_dir: Path):
+    if source_path.is_dir() and not source_path.is_symlink():
+        for root, dirs, files in os.walk(source_path):
+            dirs[:] = sorted(d for d in dirs if d != ".git")
+            for dirname in dirs:
+                update_hash_from_context_path(hash_md5, Path(root) / dirname, context_dir)
+            for filename in sorted(files):
+                update_hash_from_context_path(hash_md5, Path(root) / filename, context_dir)
+    else:
+        update_hash_from_context_path(hash_md5, source_path, context_dir)
 
 
 def redact_bake_hcl(hcl_text: str) -> str:
@@ -353,14 +496,27 @@ class Dockerfile:
 
     def md5_hash(self) -> str:
         if not self.md5_hash_:
-            input_paths = self.hash_input_paths()
-            if len(input_paths) == 1:
-                self.md5_hash_ = calculate_md5(input_paths[0])
-                return self.md5_hash_
-
             hash_md5 = hashlib.md5()
-            for input_path in input_paths:
-                hash_md5.update(calculate_md5(input_path).encode())
+            hash_md5.update(b"DOCKERFILE\0")
+            update_hash_from_file(hash_md5, self.dockerfile_path_)
+
+            for input_path in self.hash_input_paths()[1:]:
+                update_hash_from_context_source(hash_md5, input_path, self.context_dir_)
+
+            sources = []
+            for instruction in dockerfile_instruction_lines(self.dockerfile_path_):
+                sources.extend(local_copy_add_sources(instruction))
+
+            for source_path in sorted(
+                resolve_context_sources(self.context_dir_, sources),
+                key=lambda path: str(path)
+            ):
+                update_hash_from_context_source(hash_md5, source_path, self.context_dir_)
+
+            dockerignore = self.context_dir_ / ".dockerignore"
+            if dockerignore.exists():
+                update_hash_from_context_source(hash_md5, dockerignore, self.context_dir_)
+
             self.md5_hash_ = hash_md5.hexdigest()
         return self.md5_hash_
 

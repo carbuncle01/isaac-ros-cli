@@ -79,9 +79,9 @@ ENV PATH="/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/src/tensorrt/bin:${PATH
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-key adv --fetch-key https://repo.download.nvidia.com/jetson/jetson-ota-public.asc && \
     if [[ ${PLATFORM} == 'arm64' ]]; then \
-        echo 'deb http://repo.download.nvidia.com/jetson/common r38.4 main' > /etc/apt/sources.list.d/nvidia-jetson-apt-source.list; \
+        echo 'deb http://repo.download.nvidia.com/jetson/common r39.2 main' > /etc/apt/sources.list.d/nvidia-jetson-apt-source.list; \
     elif [[ ${PLATFORM} == 'amd64' ]]; then \
-        echo 'deb http://repo.download.nvidia.com/jetson/x86_64/noble r38.4 main' > /etc/apt/sources.list.d/nvidia-jetson-apt-source.list; \
+        echo 'deb http://repo.download.nvidia.com/jetson/x86_64/noble r39.2 main' > /etc/apt/sources.list.d/nvidia-jetson-apt-source.list; \
     else \
         echo "Unrecognized platform: ${PLATFORM}" && exit 1 ; \
     fi && \
