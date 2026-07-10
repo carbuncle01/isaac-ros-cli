@@ -218,6 +218,7 @@ def get_workspace_mount_args(isaac_dir):
     isaac_parent_dir = os.path.dirname(os.path.abspath(isaac_dir))
     sibling_mounts = {
         "scripts": "/scripts",
+        "tools": "/workspaces/tools",
         "debug": "/debug",
         "python_ws": "/workspaces/python_ws",
         "record": "/workspaces/record",
