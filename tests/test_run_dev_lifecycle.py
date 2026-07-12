@@ -203,6 +203,46 @@ class TestRunDevBuildArgs(unittest.TestCase):
 
         self.assertEqual(m_build.call_args.kwargs['build_args'], build_args)
 
+    def test_cached_alias_retag_does_not_remove_existing_tag(self):
+        completed = mock.Mock(returncode=0)
+        with mock.patch.object(
+            self.run_dev.subprocess,
+            'run',
+            side_effect=[completed, completed, completed],
+        ) as m_run:
+            self.assertTrue(
+                self.run_dev.make_docker_image_available('img:latest', 'cached:latest')
+            )
+
+        commands = [call.args[0] for call in m_run.call_args_list]
+        self.assertNotIn(['docker', 'rmi', 'cached:latest'], commands)
+        self.assertIn(['docker', 'tag', 'img:latest', 'cached:latest'], commands)
+
+    def test_local_build_uses_leaf_only_then_retags(self):
+        args = types.SimpleNamespace(
+            use_cached_build_image=False,
+            build=False,
+            build_local=True,
+            push=False,
+            verbose=False,
+            no_cache=False,
+            isaac_ros_platform='amd64',
+        )
+
+        with mock.patch.object(self.run_dev, 'make_docker_image_available',
+                               side_effect=[False, True]), \
+             mock.patch.object(self.run_dev, 'build_image_layers') as m_build:
+            self.run_dev.ensure_image_available(
+                args,
+                'img:latest',
+                'cached:latest',
+                '/fake/config.yaml',
+                ['isaac_ros', 'realsense', 'additional_setting'],
+            )
+
+        self.assertTrue(m_build.call_args.kwargs['leaf_only'])
+        self.assertFalse(m_build.call_args.kwargs['include_layer_depends_on'])
+
 
 class TestBuildModeSkipsContainer(unittest.TestCase):
     """build mode must resolve/build the image and never touch containers."""

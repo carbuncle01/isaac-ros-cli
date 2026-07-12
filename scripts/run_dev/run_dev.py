@@ -187,13 +187,9 @@ def make_docker_image_available(base_name, cached_image_name):
     )
 
     if pull_result.returncode == 0 or local_image_result.returncode == 0:
-        # Remove any existing cached image
-        subprocess.run(
-            ["docker", "rmi", cached_image_name],
-            stderr=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL
-        )
-        # Tag the image as our cached image name
+        # Retag directly instead of removing the old alias first. Removing the
+        # cached alias can untag other names that point at the same image ID,
+        # including expensive intermediate layer tags such as realsense.
         tag_result = subprocess.run(
             ["docker", "tag", base_name, cached_image_name]
         )
@@ -663,7 +659,20 @@ def ensure_image_available(args, base_name, cached_image_name,
     if args.push:
         build_kwargs['push'] = True
 
-    build_image_layers(**build_kwargs)
+    if args.build_local and not args.no_cache:
+        leaf_build_kwargs = {
+            **build_kwargs,
+            'leaf_only': True,
+            'include_layer_depends_on': False,
+        }
+        try:
+            build_image_layers(**leaf_build_kwargs)
+        except subprocess.CalledProcessError:
+            print("Leaf-only local build failed. Falling back to full layer build.")
+            build_image_layers(**build_kwargs)
+    else:
+        build_image_layers(**build_kwargs)
+
     if not make_docker_image_available(base_name, cached_image_name):
         print(f"Error: Failed to build or pull image {base_name}")
         sys.exit(1)

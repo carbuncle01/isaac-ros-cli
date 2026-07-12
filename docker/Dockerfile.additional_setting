@@ -186,29 +186,18 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y \
         bluez \
         can-utils \
-        chrony \
         curl \
         dialog \
         fzf \
         git \
-        gstreamer1.0-libav \
-        gstreamer1.0-plugins-bad \
-        gstreamer1.0-plugins-base \
-        gstreamer1.0-plugins-good \
-        gstreamer1.0-plugins-ugly \
-        gstreamer1.0-tools \
         htop \
         iproute2 \
         joystick \
         net-tools \
-        python3-gi \
-        python3-gst-1.0 \
         sshpass \
         terminator \
-        tcpdump \
         tmux \
         tree \
-        v4l-utils \
         vim \
         wget \
     && rm -rf /var/lib/apt/lists/*
@@ -270,6 +259,23 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 #     else \
 #         echo "Skipping FoundationStereo model download. (Architecture is $(uname -m), not x86_64)"; \
 #     fi
+
+# RTP video experiment tools. Keep this near the end so changes here do not
+# invalidate heavier ROS and sensor build layers above.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y \
+        chrony \
+        gstreamer1.0-libav \
+        gstreamer1.0-plugins-bad \
+        gstreamer1.0-plugins-base \
+        gstreamer1.0-plugins-good \
+        gstreamer1.0-plugins-ugly \
+        gstreamer1.0-tools \
+        python3-gi \
+        python3-gst-1.0 \
+        tcpdump \
+        v4l-utils \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy lightweight runtime configuration last so edits to these files only
 # invalidate the final Docker layers.
