@@ -186,18 +186,29 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y \
         bluez \
         can-utils \
+        chrony \
         curl \
         dialog \
         fzf \
         git \
+        gstreamer1.0-libav \
+        gstreamer1.0-plugins-bad \
+        gstreamer1.0-plugins-base \
+        gstreamer1.0-plugins-good \
+        gstreamer1.0-plugins-ugly \
+        gstreamer1.0-tools \
         htop \
         iproute2 \
         joystick \
         net-tools \
+        python3-gi \
+        python3-gst-1.0 \
         sshpass \
         terminator \
+        tcpdump \
         tmux \
         tree \
+        v4l-utils \
         vim \
         wget \
     && rm -rf /var/lib/apt/lists/*
