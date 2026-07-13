@@ -178,6 +178,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         ros-jazzy-joy \
         ros-jazzy-rosbag2-tools \
         ros-jazzy-rqt-tf-tree \
+        ros-jazzy-serial-driver \
         ros-jazzy-tf2-tools \
     && rm -rf /var/lib/apt/lists/*
 
