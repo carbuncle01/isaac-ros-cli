@@ -1,5 +1,5 @@
 image_key_order:
-  - isaac_ros.noble.ros2_jazzy.realsense.silky_evcam.gr00t_workflow.ur_manipulation.mega_manipulation.nova_carter
+  - isaac_ros.noble.ros2_jazzy.realsense.gr00t_workflow.ur_manipulation.mega_manipulation.nova_carter.additional_setting.silky_evcam
 context_overrides:
   isaac_ros: ..
   noble: ..
