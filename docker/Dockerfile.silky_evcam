@@ -1,0 +1,61 @@
+# Dockerfile for building OpenEB with the CenturyArks SilkyEvCam plugin.
+#
+# Before building, manually obtain and extract the official plugin source from
+# CenturyArks, then place hal/, hal_psee_plugins/, and licensing/ under:
+#   docker/silky_evcam_plugin_source/
+ARG BASE_IMAGE=ubuntu:24.04
+FROM ${BASE_IMAGE}
+
+SHELL ["/bin/bash", "-c"]
+ENV DEBIAN_FRONTEND=noninteractive
+
+ARG OPENEB_GIT_URL=https://github.com/prophesee-ai/openeb.git
+ARG OPENEB_VERSION=5.2.0
+ARG OPENEB_BUILD_JOBS=2
+
+WORKDIR /opt
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y \
+        build-essential \
+        ca-certificates \
+        cmake \
+        git \
+        libboost-filesystem-dev \
+        libboost-program-options-dev \
+        libboost-thread-dev \
+        libeigen3-dev \
+        libglew-dev \
+        libglfw3-dev \
+        libhdf5-dev \
+        libopencv-dev \
+        libprotobuf-dev \
+        libssl-dev \
+        libusb-1.0-0-dev \
+        pkg-config \
+        protobuf-compiler \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN git clone --depth 1 --branch "${OPENEB_VERSION}" "${OPENEB_GIT_URL}" /opt/openeb
+
+COPY silky_evcam_plugin_source/ /tmp/silky_evcam_plugin_source/
+
+RUN set -eux; \
+    test -d /tmp/silky_evcam_plugin_source/hal; \
+    test -d /tmp/silky_evcam_plugin_source/hal_psee_plugins; \
+    test -d /tmp/silky_evcam_plugin_source/licensing; \
+    cp -av \
+        /tmp/silky_evcam_plugin_source/hal \
+        /tmp/silky_evcam_plugin_source/hal_psee_plugins \
+        /tmp/silky_evcam_plugin_source/licensing \
+        /opt/openeb/; \
+    rm -rf /tmp/silky_evcam_plugin_source
+
+RUN set -eux; \
+    cmake -S /opt/openeb -B /opt/openeb/build \
+        -DBUILD_TESTING=OFF \
+        -DCOMPILE_PYTHON3_BINDINGS=OFF \
+        -DCMAKE_BUILD_TYPE=Release; \
+    cmake --build /opt/openeb/build --config Release -- -j"${OPENEB_BUILD_JOBS}"; \
+    cmake --install /opt/openeb/build; \
+    ldconfig

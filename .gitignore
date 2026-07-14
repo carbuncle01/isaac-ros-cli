@@ -7,3 +7,7 @@ debian/*.debhelper.log
 debian/*-stamp
 debian/files
 .docker-deb-overrides/
+
+# CenturyArks SilkyEvCam plugin source is distributed separately.
+docker/silky_evcam_plugin_source/*
+!docker/silky_evcam_plugin_source/README.md
