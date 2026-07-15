@@ -26,6 +26,13 @@ print_info "Custom network settings applied."
 
 export HOME=${USER_HOME}
 
+# Prefer the locally installed OpenEB/Metavision SDK. JetPilot builds OpenEB
+# with the CenturyArks SilkyEvCam plugin under /usr/local, while the ROS
+# openeb_vendor package does not include that plugin.
+export PATH="/usr/local/bin:${PATH}"
+export LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH:-}"
+export CMAKE_PREFIX_PATH="/usr/local:${CMAKE_PREFIX_PATH:-}"
+
 # Bind-mounted dotfiles keep the host uid/gid. Avoid recursive chown because
 # read-only mounts such as .ssh, .aws, and .profile will reject it.
 chown ${HOST_USER_UID}:${HOST_USER_GID} ${USER_HOME} || true

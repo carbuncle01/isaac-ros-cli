@@ -179,7 +179,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         ros-jazzy-gxf-isaac-ros-cuda \
         ros-jazzy-image-transport-plugins \
         ros-jazzy-joy \
-        ros-jazzy-openeb-vendor \
         ros-jazzy-rosbag2-tools \
         ros-jazzy-rqt-tf-tree \
         ros-jazzy-serial-driver \

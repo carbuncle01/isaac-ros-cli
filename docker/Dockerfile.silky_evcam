@@ -8,6 +8,9 @@ FROM ${BASE_IMAGE}
 
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PATH=/usr/local/bin:${PATH}
+ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH}
+ENV CMAKE_PREFIX_PATH=/usr/local:${CMAKE_PREFIX_PATH}
 
 ARG OPENEB_GIT_URL=https://github.com/prophesee-ai/openeb.git
 ARG OPENEB_VERSION=5.2.0
