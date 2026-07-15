@@ -832,6 +832,16 @@ def resolve_dockerfiles(
 def check_docker_image_exists(image):
     try:
         run_shell(
+            f'docker image inspect {image}',
+            capture_output=True,
+            check=True
+        )
+        return True
+    except subprocess.CalledProcessError:
+        pass
+
+    try:
+        run_shell(
             f'docker manifest inspect {image}',
             capture_output=True,
             check=True

@@ -171,8 +171,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         ros-jazzy-cartographer \
         ros-jazzy-cartographer-ros \
         ros-jazzy-cartographer-rviz \
-        ros-jazzy-event-camera-codecs \
-        ros-jazzy-event-camera-msgs \
         ros-jazzy-gxf-isaac-cuda \
         ros-jazzy-gxf-isaac-flatscan-localization \
         ros-jazzy-gxf-isaac-localization \

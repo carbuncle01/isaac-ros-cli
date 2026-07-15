@@ -37,6 +37,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         libssl-dev \
         libusb-1.0-0-dev \
         pkg-config \
+        ros-jazzy-event-camera-codecs \
+        ros-jazzy-event-camera-msgs \
         protobuf-compiler \
     && rm -rf /var/lib/apt/lists/*
 

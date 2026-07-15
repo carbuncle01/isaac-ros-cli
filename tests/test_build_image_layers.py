@@ -304,6 +304,48 @@ class TestBakeLayerDependsOn(unittest.TestCase):
             self.assertEqual(target['args']['ISAAC_DEBIAN_DISTRO_SUFFIX'], '-fastos')
 
 
+class TestDockerImageExists(unittest.TestCase):
+    """Verify local layer tags are reused before checking remote manifests."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.build_image_layers = _import_build_image_layers()
+
+    def test_local_image_inspect_short_circuits_manifest_check(self):
+        mod = self.build_image_layers
+        calls = []
+
+        def fake_run_shell(command, *args, **kwargs):
+            calls.append(command)
+            return True, '', ''
+
+        with mock.patch.object(mod, 'run_shell', side_effect=fake_run_shell):
+            self.assertTrue(mod.check_docker_image_exists('example/image:latest'))
+
+        self.assertEqual(calls, ['docker image inspect example/image:latest'])
+
+    def test_manifest_checked_when_local_image_missing(self):
+        mod = self.build_image_layers
+        calls = []
+
+        def fake_run_shell(command, *args, **kwargs):
+            calls.append(command)
+            if command.startswith('docker image inspect '):
+                raise mod.subprocess.CalledProcessError(1, command)
+            return True, '', ''
+
+        with mock.patch.object(mod, 'run_shell', side_effect=fake_run_shell):
+            self.assertTrue(mod.check_docker_image_exists('example/image:latest'))
+
+        self.assertEqual(
+            calls,
+            [
+                'docker image inspect example/image:latest',
+                'docker manifest inspect example/image:latest',
+            ]
+        )
+
+
 class TestBuildImageLayersMain(unittest.TestCase):
     """Verify high-risk orchestration behavior in main()."""
 
