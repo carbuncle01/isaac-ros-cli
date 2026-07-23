@@ -36,6 +36,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         rsync \
     && rm -rf /var/lib/apt/lists/*
 
+# Jetson status monitor (jtop).
+RUN python3 -m pip install --break-system-packages \
+    "git+https://github.com/rbonghi/jetson_stats.git"
+
 # Ensure the Isaac ROS 4.5 Jazzy apt repository is available for the package listing below.
 ARG ISAAC_DEBIAN_COMPONENTS="main external-main"
 ARG ISAAC_DEBIAN_DISTRO_SUFFIX=""
@@ -85,6 +89,7 @@ RUN set -eux; \
             matplotlib==3.11.0 \
             scipy==1.17.1 \
             quadprog==0.1.13 \
+            rosbags==0.11.3 \
             "ultralytics>=8.3,<9"; \
         /opt/env/bin/python -m pip install \
             "git+https://github.com/carbuncle01/trajectory_planning_helpers.git@master" \
