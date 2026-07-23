@@ -36,9 +36,13 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         rsync \
     && rm -rf /var/lib/apt/lists/*
 
-# Jetson status monitor (jtop).
-RUN python3 -m pip install --break-system-packages \
-    "git+https://github.com/rbonghi/jetson_stats.git"
+# Jetson status monitor (jtop). Skip x86_64 builds because jetson-stats is
+# only useful on Jetson targets.
+RUN set -eux; \
+    if [ "$(uname -m)" = "aarch64" ]; then \
+        python3 -m pip install --break-system-packages \
+            "git+https://github.com/rbonghi/jetson_stats.git"; \
+    fi
 
 # Ensure the Isaac ROS 4.5 Jazzy apt repository is available for the package listing below.
 ARG ISAAC_DEBIAN_COMPONENTS="main external-main"
