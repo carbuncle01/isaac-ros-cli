@@ -100,74 +100,95 @@ RUN set -eux; \
             --no-deps; \
     fi
 
-# Isaac ROS packages for ROS 2 Jazzy / Ubuntu noble.
+# Isaac ROS feature roots used by JetPilot.
+#
+# Keep this list at the feature level. APT pulls the required Isaac ROS Common,
+# GXF, NITROS, type-adaptation, and interface packages transitively. Explicitly
+# listing every package in those dependency trees makes optional pipelines such
+# as RT-DETR, SegFormer, Triton, and UNet part of the image even though JetPilot
+# does not launch them.
+#
+# Feature mapping:
+# - isaac_mapping_ros / visual_mapping: offline map creation and VGL engines
+# - launch_utils / jetson_stats: JetPilot launch files and Jetson diagnostics
+# - dnn_image_encoder / tensor_rt: GPU image preprocessing and JetPilot E2E inference
+# - NITROS image / camera_info / tensor_list types: explicit E2E graph contracts
+# - visual_global_localization / visual_slam: localization
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y \
-        ros-jazzy-isaac-common \
         ros-jazzy-isaac-mapping-ros \
-        ros-jazzy-isaac-ros-common \
-        ros-jazzy-isaac-ros-deploy \
-        ros-jazzy-isaac-ros-deploy-converters \
-        ros-jazzy-isaac-ros-deploy-interfaces \
-        ros-jazzy-isaac-ros-deploy-ros2-control \
-        ros-jazzy-isaac-ros-depth-image-proc \
         ros-jazzy-isaac-ros-dnn-image-encoder \
-        ros-jazzy-isaac-ros-gxf \
-        ros-jazzy-isaac-ros-h264-decoder \
-        ros-jazzy-isaac-ros-h264-encoder \
-        ros-jazzy-isaac-ros-image-pipeline \
-        ros-jazzy-isaac-ros-image-proc \
         ros-jazzy-isaac-ros-jetson-stats \
-        ros-jazzy-isaac-ros-jetson-stats-services \
-        ros-jazzy-isaac-ros-json-info-generator \
         ros-jazzy-isaac-ros-launch-utils \
-        ros-jazzy-isaac-ros-managed-nitros \
-        ros-jazzy-isaac-ros-nitros \
-        ros-jazzy-isaac-ros-nitros-battery-state-type \
-        ros-jazzy-isaac-ros-nitros-bridge-interfaces \
-        ros-jazzy-isaac-ros-nitros-bridge-ros2 \
         ros-jazzy-isaac-ros-nitros-camera-info-type \
-        ros-jazzy-isaac-ros-nitros-compressed-image-type \
-        ros-jazzy-isaac-ros-nitros-compressed-video-type \
-        ros-jazzy-isaac-ros-nitros-correlated-timestamp-type \
-        ros-jazzy-isaac-ros-nitros-detection2-d-array-type \
-        ros-jazzy-isaac-ros-nitros-detection3-d-array-type \
-        ros-jazzy-isaac-ros-nitros-disparity-image-type \
-        ros-jazzy-isaac-ros-nitros-encoder-ticks-type \
-        ros-jazzy-isaac-ros-nitros-flat-scan-type \
         ros-jazzy-isaac-ros-nitros-image-type \
-        ros-jazzy-isaac-ros-nitros-imu-type \
-        ros-jazzy-isaac-ros-nitros-occupancy-grid-type \
-        ros-jazzy-isaac-ros-nitros-odometry-type \
-        ros-jazzy-isaac-ros-nitros-point-cloud-type \
-        ros-jazzy-isaac-ros-nitros-pose-array-type \
-        ros-jazzy-isaac-ros-nitros-pose-cov-stamped-type \
-        ros-jazzy-isaac-ros-nitros-std-msg-type \
         ros-jazzy-isaac-ros-nitros-tensor-list-type \
-        ros-jazzy-isaac-ros-nitros-topic-tools \
-        ros-jazzy-isaac-ros-nitros-twist-type \
-        ros-jazzy-isaac-ros-nova-interfaces \
-        ros-jazzy-isaac-ros-occupancy-grid-localizer \
-        ros-jazzy-isaac-ros-pointcloud-interfaces \
-        ros-jazzy-isaac-ros-pointcloud-utils \
-        ros-jazzy-isaac-ros-pynitros \
-        ros-jazzy-isaac-ros-realsense \
-        ros-jazzy-isaac-ros-rtdetr \
-        ros-jazzy-isaac-ros-robots-tools \
-        ros-jazzy-isaac-ros-segformer \
-        ros-jazzy-isaac-ros-stereo-image-proc \
         ros-jazzy-isaac-ros-tensor-list-interfaces \
-        ros-jazzy-isaac-ros-tensor-proc \
         ros-jazzy-isaac-ros-tensor-rt \
-        ros-jazzy-isaac-ros-triton \
-        ros-jazzy-isaac-ros-unet \
-        ros-jazzy-isaac-ros-usb-cam \
         ros-jazzy-isaac-ros-visual-global-localization \
         ros-jazzy-isaac-ros-visual-mapping \
         ros-jazzy-isaac-ros-visual-slam \
-        ros-jazzy-isaac-ros-visual-slam-interfaces \
-        ros-jazzy-isaac-ros-vpi-utils \
     && rm -rf /var/lib/apt/lists/*
+
+# Previously explicit Isaac ROS packages.
+#
+# They are intentionally not installed as feature roots. Keep this reference
+# list so a future pipeline can promote the corresponding package back into
+# the active apt list above. Packages required by the active feature roots may
+# still be installed transitively by APT.
+#
+# ros-jazzy-isaac-common
+# ros-jazzy-isaac-ros-common
+# ros-jazzy-isaac-ros-deploy
+# ros-jazzy-isaac-ros-deploy-converters
+# ros-jazzy-isaac-ros-deploy-interfaces
+# ros-jazzy-isaac-ros-deploy-ros2-control
+# ros-jazzy-isaac-ros-depth-image-proc
+# ros-jazzy-isaac-ros-gxf
+# ros-jazzy-isaac-ros-h264-decoder
+# ros-jazzy-isaac-ros-h264-encoder
+# ros-jazzy-isaac-ros-image-pipeline
+# ros-jazzy-isaac-ros-image-proc
+# ros-jazzy-isaac-ros-jetson-stats-services
+# ros-jazzy-isaac-ros-json-info-generator
+# ros-jazzy-isaac-ros-managed-nitros
+# ros-jazzy-isaac-ros-nitros
+# ros-jazzy-isaac-ros-nitros-battery-state-type
+# ros-jazzy-isaac-ros-nitros-bridge-interfaces
+# ros-jazzy-isaac-ros-nitros-bridge-ros2
+# ros-jazzy-isaac-ros-nitros-compressed-image-type
+# ros-jazzy-isaac-ros-nitros-compressed-video-type
+# ros-jazzy-isaac-ros-nitros-correlated-timestamp-type
+# ros-jazzy-isaac-ros-nitros-detection2-d-array-type
+# ros-jazzy-isaac-ros-nitros-detection3-d-array-type
+# ros-jazzy-isaac-ros-nitros-disparity-image-type
+# ros-jazzy-isaac-ros-nitros-encoder-ticks-type
+# ros-jazzy-isaac-ros-nitros-flat-scan-type
+# ros-jazzy-isaac-ros-nitros-imu-type
+# ros-jazzy-isaac-ros-nitros-occupancy-grid-type
+# ros-jazzy-isaac-ros-nitros-odometry-type
+# ros-jazzy-isaac-ros-nitros-point-cloud-type
+# ros-jazzy-isaac-ros-nitros-pose-array-type
+# ros-jazzy-isaac-ros-nitros-pose-cov-stamped-type
+# ros-jazzy-isaac-ros-nitros-std-msg-type
+# ros-jazzy-isaac-ros-nitros-topic-tools
+# ros-jazzy-isaac-ros-nitros-twist-type
+# ros-jazzy-isaac-ros-nova-interfaces
+# ros-jazzy-isaac-ros-occupancy-grid-localizer
+# ros-jazzy-isaac-ros-pointcloud-interfaces
+# ros-jazzy-isaac-ros-pointcloud-utils
+# ros-jazzy-isaac-ros-pynitros
+# ros-jazzy-isaac-ros-realsense
+# ros-jazzy-isaac-ros-rtdetr
+# ros-jazzy-isaac-ros-robots-tools
+# ros-jazzy-isaac-ros-segformer
+# ros-jazzy-isaac-ros-stereo-image-proc
+# ros-jazzy-isaac-ros-tensor-proc
+# ros-jazzy-isaac-ros-triton
+# ros-jazzy-isaac-ros-unet
+# ros-jazzy-isaac-ros-usb-cam
+# ros-jazzy-isaac-ros-visual-slam-interfaces
+# ros-jazzy-isaac-ros-vpi-utils
 
 # ROS packages.
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
