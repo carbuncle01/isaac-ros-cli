@@ -37,6 +37,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         libssl-dev \
         libusb-1.0-0-dev \
         pkg-config \
+        pybind11-dev \
+        python3-dev \
+        python3-numpy \
+        python3-pybind11 \
         ros-jazzy-event-camera-codecs \
         ros-jazzy-event-camera-msgs \
         protobuf-compiler \
@@ -60,8 +64,16 @@ RUN set -eux; \
 RUN set -eux; \
     cmake -S /opt/openeb -B /opt/openeb/build \
         -DBUILD_TESTING=OFF \
-        -DCOMPILE_PYTHON3_BINDINGS=OFF \
+        -DCOMPILE_PYTHON3_BINDINGS=ON \
         -DCMAKE_BUILD_TYPE=Release; \
     cmake --build /opt/openeb/build --config Release -- -j"${OPENEB_BUILD_JOBS}"; \
     cmake --install /opt/openeb/build; \
     ldconfig
+
+# multi_sensor_calibration resolves this path by default. PyTorch is supplied
+# by the CUDA deep-learning base image and is imported only by the E2V command.
+ENV METAVISION_E2V_CHECKPOINT=/opt/openeb/sdk/modules/core_ml/models/e2v.ckpt
+
+RUN set -eux; \
+    test -s "${METAVISION_E2V_CHECKPOINT}"; \
+    python3 -c "import torch; from metavision_core.event_io import EventsIterator; import metavision_core_ml"
