@@ -15,6 +15,7 @@ ENV CMAKE_PREFIX_PATH=/usr/local:${CMAKE_PREFIX_PATH}
 ARG OPENEB_GIT_URL=https://github.com/prophesee-ai/openeb.git
 ARG OPENEB_VERSION=5.2.0
 ARG OPENEB_BUILD_JOBS=2
+ARG TARGETARCH
 
 WORKDIR /opt
 
@@ -70,10 +71,23 @@ RUN set -eux; \
     cmake --install /opt/openeb/build; \
     ldconfig
 
-# multi_sensor_calibration resolves this path by default. PyTorch is supplied
-# by the CUDA deep-learning base image and is imported only by the E2V command.
+# multi_sensor_calibration resolves this path by default. Event recording runs
+# on both architectures, while PyTorch E2V reconstruction is supported only on
+# x86_64/amd64.
 ENV METAVISION_E2V_CHECKPOINT=/opt/openeb/sdk/modules/core_ml/models/e2v.ckpt
 
 RUN set -eux; \
-    test -s "${METAVISION_E2V_CHECKPOINT}"; \
-    python3 -c "import torch; from metavision_core.event_io import EventsIterator; import metavision_core_ml"
+    case "${TARGETARCH}" in \
+        amd64) \
+            test -s "${METAVISION_E2V_CHECKPOINT}"; \
+            python3 -c "import torch; from metavision_core.event_io import EventsIterator; from metavision_core_ml.event_to_video.event_to_video import EventToVideo"; \
+            ;; \
+        arm64) \
+            python3 -c "from metavision_core.event_io import EventsIterator"; \
+            echo "Skipping PyTorch E2V validation on arm64; event recording remains enabled"; \
+            ;; \
+        *) \
+            echo "Unsupported Docker target architecture: ${TARGETARCH}" >&2; \
+            exit 1; \
+            ;; \
+    esac
