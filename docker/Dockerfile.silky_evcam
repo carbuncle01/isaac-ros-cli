@@ -9,13 +9,16 @@ FROM ${BASE_IMAGE}
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PATH=/usr/local/bin:${PATH}
-ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH}
-ENV CMAKE_PREFIX_PATH=/usr/local:${CMAKE_PREFIX_PATH}
+ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH:-}
+ENV CMAKE_PREFIX_PATH=/usr/local:${CMAKE_PREFIX_PATH:-}
 
 ARG OPENEB_GIT_URL=https://github.com/prophesee-ai/openeb.git
 ARG OPENEB_VERSION=5.2.0
 ARG OPENEB_BUILD_JOBS=2
+ARG E2V_TORCH_VERSION=2.9.0+cu130
+ARG E2V_TORCH_INDEX_URL=https://download.pytorch.org/whl/cu130
 ARG TARGETARCH
+ARG PLATFORM
 
 WORKDIR /opt
 
@@ -40,12 +43,35 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         pkg-config \
         pybind11-dev \
         python3-dev \
+        python3-h5py \
         python3-numpy \
         python3-pybind11 \
+        python3-pip \
         ros-jazzy-event-camera-codecs \
         ros-jazzy-event-camera-msgs \
         protobuf-compiler \
     && rm -rf /var/lib/apt/lists/*
+
+# E2V reconstruction runs only on x86_64. Install PyTorch into the system
+# interpreter used by ros2 run. Do not install it on Jetson/arm64, where this
+# image is used only for OpenEB/SilkyEvCam event recording.
+RUN --mount=type=cache,target=/root/.cache/pip \
+    set -eux; \
+    target_arch="${TARGETARCH:-${PLATFORM:-$(dpkg --print-architecture)}}"; \
+    case "${target_arch}" in \
+        amd64|x86_64) \
+            python3 -m pip install --break-system-packages \
+                --index-url "${E2V_TORCH_INDEX_URL}" \
+                "torch==${E2V_TORCH_VERSION}"; \
+            ;; \
+        arm64|aarch64) \
+            echo "Skipping PyTorch installation on ${target_arch}"; \
+            ;; \
+        *) \
+            echo "Unsupported Docker target architecture: ${target_arch}" >&2; \
+            exit 1; \
+            ;; \
+    esac
 
 RUN git clone --depth 1 --branch "${OPENEB_VERSION}" "${OPENEB_GIT_URL}" /opt/openeb
 
@@ -77,17 +103,17 @@ RUN set -eux; \
 ENV METAVISION_E2V_CHECKPOINT=/opt/openeb/sdk/modules/core_ml/models/e2v.ckpt
 
 RUN set -eux; \
-    case "${TARGETARCH}" in \
-        amd64) \
+    target_arch="${TARGETARCH:-${PLATFORM:-$(dpkg --print-architecture)}}"; \
+    case "${target_arch}" in \
+        amd64|x86_64) \
             test -s "${METAVISION_E2V_CHECKPOINT}"; \
-            python3 -c "import torch; from metavision_core.event_io import EventsIterator; from metavision_core_ml.event_to_video.event_to_video import EventToVideo"; \
+            python3 -c "import torch; assert torch.version.cuda and torch.version.cuda.split('.')[0] == '13', torch.version.cuda; from metavision_core.event_io import EventsIterator; from metavision_core_ml.event_to_video.event_to_video import EventToVideo; print(f'E2V PyTorch {torch.__version__}, CUDA build {torch.version.cuda}')"; \
             ;; \
-        arm64) \
-            python3 -c "from metavision_core.event_io import EventsIterator"; \
-            echo "Skipping PyTorch E2V validation on arm64; event recording remains enabled"; \
+        arm64|aarch64) \
+            echo "Skipping Python E2V validation on ${target_arch}; OpenEB/SilkyEvCam event recording remains enabled"; \
             ;; \
         *) \
-            echo "Unsupported Docker target architecture: ${TARGETARCH}" >&2; \
+            echo "Unsupported Docker target architecture: ${target_arch}" >&2; \
             exit 1; \
             ;; \
     esac
