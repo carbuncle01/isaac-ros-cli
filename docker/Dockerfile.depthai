@@ -43,7 +43,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && rm -rf /var/lib/apt/lists/*
 
 RUN set -eux; \
+    set +u; \
     source "/opt/ros/${ROS_DISTRO}/setup.bash"; \
+    set -u; \
     cd "${DEPTHAI_ROS_WS}"; \
     MAKEFLAGS="-j${DEPTHAI_BUILD_JOBS} -l${DEPTHAI_BUILD_JOBS}" \
         colcon build \
