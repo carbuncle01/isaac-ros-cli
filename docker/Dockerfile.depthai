@@ -21,5 +21,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         libusb-1.0-0 \
         "ros-${ROS_DISTRO}-depthai-ros-v3" \
     && test -f "/opt/ros/${ROS_DISTRO}/share/depthai_ros_driver_v3/package.xml" \
-    && apt-get purge -y ros2-testing-apt-source \
+    && apt-get install -y --no-install-recommends ros2-apt-source \
+    && apt-get update \
+    && apt-cache show "ros-${ROS_DISTRO}-event-camera-codecs" >/dev/null \
+    && apt-cache show "ros-${ROS_DISTRO}-event-camera-msgs" >/dev/null \
     && rm -rf /var/lib/apt/lists/*
