@@ -7,11 +7,13 @@ SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
 ARG ROS_DISTRO=jazzy
+ARG DEPTHAI_PYTHON_VERSION=3.6.1
 
 # Humble and Jazzy publish the v3 driver as depthai_ros_driver_v3 from the
 # ros-${ROS_DISTRO}-depthai-ros-v3 Debian package.  Use the official binary
 # package so memory-constrained Jetson devices do not compile depthai-core.
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/root/.cache/pip \
     apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
@@ -19,8 +21,13 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         libusb-1.0-0 \
+        python3-pip \
         "ros-${ROS_DISTRO}-depthai-ros-v3" \
+        usbutils \
     && test -f "/opt/ros/${ROS_DISTRO}/share/depthai_ros_driver_v3/package.xml" \
+    && python3 -m pip install --break-system-packages \
+        "depthai==${DEPTHAI_PYTHON_VERSION}" \
+    && python3 -c "import depthai as dai; print('DepthAI Python:', dai.__version__)" \
     && apt-get install -y --no-install-recommends ros2-apt-source \
     && apt-get update \
     && apt-cache show "ros-${ROS_DISTRO}-event-camera-codecs" >/dev/null \
