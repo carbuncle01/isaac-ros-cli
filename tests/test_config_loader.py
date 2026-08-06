@@ -124,6 +124,16 @@ class ConfigLoaderTests(unittest.TestCase):
         self.assertEqual(shipped_config["apt"]["components"], ["main"])
         self.assertNotIn("snapshot", shipped_config["apt"])
 
+    def test_build_image_layers_config_is_valid_and_includes_custom_layers(self):
+        """Keep the packaged layer order valid when custom layer branches are merged."""
+        config_path = Path(__file__).resolve().parents[1] / "config" / ".build_image_layers.yaml"
+        config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(len(config["image_key_order"]), 1)
+        image_key_order = config["image_key_order"][0].split(".")
+        self.assertIn("jp72_orin", image_key_order)
+        self.assertIn("depthai", image_key_order)
+
     def test_load_config_merges_all_available_sources_in_precedence_order(self):
         """Lock down the core precedence contract across read-only, system, user, and workspace."""
         self.read_only.write_text(
