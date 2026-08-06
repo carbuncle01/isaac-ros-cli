@@ -1,0 +1,44 @@
+# JetPack 7.2 compute stack for Jetson Orin.
+#
+# Isaac ROS CLI 2.4 installs APT preferences for its validated JetPack 7.1
+# stack (CUDA 13.0 / TensorRT 10.13).  TensorRT 10.13's SBSA build does not
+# contain kernels for Orin's SM 8.7.  JetPack 7.2 adds Orin support through
+# CUDA 13.2 and TensorRT 10.16, so replace the CLI pins before installing the
+# TensorRT packages used by downstream Isaac ROS nodes.
+ARG BASE_IMAGE=ubuntu:24.04
+FROM ${BASE_IMAGE}
+
+ARG PLATFORM
+ARG CUDA_TOOLKIT_VERSION=13.2.1-1
+ARG TENSORRT_VERSION=10.16.2.10-1+cuda13.2
+
+SHELL ["/bin/bash", "-c"]
+ENV DEBIAN_FRONTEND=noninteractive
+
+COPY packaging/jetpilot-jp72-orin.pref \
+    /tmp/jetpilot-jp72-orin.pref
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    if [[ "${PLATFORM}" == "arm64" ]]; then \
+        rm -f \
+            /etc/apt/preferences.d/isaac-ros-cuda-13-0.pref \
+            /etc/apt/preferences.d/isaac-ros-tensorrt-13-0.pref; \
+        install -m 0644 /tmp/jetpilot-jp72-orin.pref \
+            /etc/apt/preferences.d/jetpilot-jp72-orin.pref; \
+        rm -f /tmp/jetpilot-jp72-orin.pref; \
+        apt-get update; \
+        apt-get install -y --no-install-recommends \
+            "cuda-toolkit-13-2=${CUDA_TOOLKIT_VERSION}" \
+            "tensorrt=${TENSORRT_VERSION}" \
+            "libnvinfer-bin=${TENSORRT_VERSION}" \
+            "python3-libnvinfer=${TENSORRT_VERSION}"; \
+        update-alternatives --set cuda /usr/local/cuda-13.2; \
+        update-alternatives --set cuda-13 /usr/local/cuda-13.2; \
+        test "$(dpkg-query -W -f='\${Version}' libnvinfer10)" = "${TENSORRT_VERSION}"; \
+        test "$(dpkg-query -W -f='\${Version}' tensorrt)" = "${TENSORRT_VERSION}"; \
+        test "$(readlink -f /usr/local/cuda)" = "/usr/local/cuda-13.2"; \
+        rm -rf /var/lib/apt/lists/*; \
+    else \
+        rm -f /tmp/jetpilot-jp72-orin.pref; \
+        echo "Skipping the JetPack 7.2 Orin compute stack on ${PLATFORM}"; \
+    fi

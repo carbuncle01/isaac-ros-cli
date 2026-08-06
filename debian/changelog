@@ -1,4 +1,4 @@
-isaac-ros-cli (2.4.0-1) noble; urgency=low
+isaac-ros-cli (2.4.0-1.20260725224724) noble; urgency=low
 
   * Add config schema validation, command-line overrides, and the `isaac-ros status` command.
   * Improve Docker activation, `run_dev` image build lifecycle handling, and BuildKit scheduling.

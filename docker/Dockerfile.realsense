@@ -11,6 +11,7 @@
 ARG BASE_IMAGE=ubuntu:24.04
 FROM ${BASE_IMAGE}
 
+ARG PLATFORM
 ENV ROS_DISTRO=jazzy
 ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
 
@@ -23,7 +24,12 @@ COPY scripts/build-librealsense.sh /opt/realsense/build-librealsense.sh
 COPY scripts/install-realsense-dependencies.sh /opt/realsense/install-realsense-dependencies.sh
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    apt-get update && apt-get install -y cuda-toolkit-13-0
+    apt-get update \
+    && if [ "${PLATFORM}" = "arm64" ]; then \
+        apt-get install -y cuda-toolkit-13-2; \
+    else \
+        apt-get install -y cuda-toolkit-13-0; \
+    fi
 RUN chmod +x /opt/realsense/install-realsense-dependencies.sh && \
     /opt/realsense/install-realsense-dependencies.sh
 RUN chmod +x /opt/realsense/build-librealsense.sh && /opt/realsense/build-librealsense.sh -v ${LIBREALSENSE_SOURCE_VERSION} ${LIBREALSENSE_BUILD_TOOL_OPTIONS}

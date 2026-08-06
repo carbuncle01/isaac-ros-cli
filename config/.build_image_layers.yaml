@@ -1,5 +1,9 @@
 image_key_order:
+<<<<<<< HEAD
   - isaac_ros.noble.ros2_jazzy.realsense.depthai.silky_evcam.gr00t_workflow.ur_manipulation.mega_manipulation.nova_carter.additional_setting
+=======
+  - isaac_ros.noble.ros2_jazzy.jp72_orin.realsense.silky_evcam.gr00t_workflow.ur_manipulation.mega_manipulation.nova_carter.additional_setting
+>>>>>>> 062001b (Add JetPack 7.2 support for Jetson Orin: Update Dockerfiles and add preference file)
 context_overrides:
   isaac_ros: ..
   noble: ..
