@@ -36,6 +36,9 @@ chown ${USERNAME}:${USERNAME} /home/${USERNAME}
 echo ${USERNAME} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${USERNAME}
 chmod 0440 /etc/sudoers.d/${USERNAME}
 adduser ${USERNAME} video >/dev/null
+if getent group render >/dev/null; then
+  adduser ${USERNAME} render >/dev/null
+fi
 adduser ${USERNAME} plugdev >/dev/null
 adduser ${USERNAME} sudo  >/dev/null
 
