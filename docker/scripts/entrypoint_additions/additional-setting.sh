@@ -26,6 +26,21 @@ print_info "Custom network settings applied."
 
 export HOME=${USER_HOME}
 
+# JetPack 7.2 on Orin opens the DRM render node while creating a CUDA
+# context.  Mirror the device GID instead of assuming the container's render
+# group has the same numeric ID as the host.
+if [ -c /dev/dri/renderD128 ]; then
+    HOST_RENDER_GID=$(stat -c '%g' /dev/dri/renderD128)
+    EXISTING_RENDER_GROUP=$(getent group "${HOST_RENDER_GID}" | cut -d: -f1)
+    if [ -n "${EXISTING_RENDER_GROUP}" ]; then
+        usermod -aG "${EXISTING_RENDER_GROUP}" "${USER_NAME}"
+    else
+        groupadd -g "${HOST_RENDER_GID}" render_host
+        usermod -aG render_host "${USER_NAME}"
+    fi
+    print_info "Granted ${USER_NAME} access to render device GID ${HOST_RENDER_GID}."
+fi
+
 # Prefer the locally installed OpenEB/Metavision SDK. JetPilot builds OpenEB
 # with the CenturyArks SilkyEvCam plugin under /usr/local, while the ROS
 # openeb_vendor package does not include that plugin.

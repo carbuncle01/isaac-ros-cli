@@ -5,7 +5,8 @@ Package: libnvinfer* tensorrt* libnvonnxparsers* python3-libnvinfer*
 Pin: version 10.16.2.10-1+cuda13.2
 Pin-Priority: 1001
 
-# Prefer CUDA 13.2 after removing Isaac ROS CLI's CUDA 13.0 policy.
-Package: cuda-* libnv*
-Pin: version 13.2.*
+# Prefer the JetPack 7.2 packages over newer generic SBSA packages.  Keeping
+# libcudart aligned with the r39.2 host driver is important on Jetson Orin.
+Package: *
+Pin: release n=r39.2
 Pin-Priority: 1001
