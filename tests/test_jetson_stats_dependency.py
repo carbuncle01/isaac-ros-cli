@@ -37,6 +37,14 @@ class TestJetsonStatsDependency(unittest.TestCase):
         patch = PATCH_FILE.read_text(encoding='utf-8')
 
         self.assertIn(PATCH_FILE.name, dockerfile)
+        self.assertIn(
+            'COPY patches/jetson-stats-7.2.0-library-probe.patch',
+            dockerfile,
+        )
+        self.assertNotIn(
+            'COPY docker/patches/jetson-stats-7.2.0-library-probe.patch',
+            dockerfile,
+        )
         self.assertIn('git -C /tmp/jetson_stats apply', dockerfile)
         self.assertIn('except OSError:', patch)
         self.assertIn("if vpi := load_library('nvvpi'):", patch)
