@@ -126,34 +126,93 @@ class TestParseArgsMode(unittest.TestCase):
 
 
 class TestWorkspaceMounts(unittest.TestCase):
-    """Verify JetPilot sibling directories use the documented container paths."""
+    """Verify the complete JetPilot project is mounted at /workspaces."""
 
     @classmethod
     def setUpClass(cls):
         cls.run_dev = _import_run_dev()
 
-    def test_workspace_support_mounts_match_documentation(self):
+    @staticmethod
+    def _make_workspace(project_root):
+        os.makedirs(project_root, exist_ok=True)
+        marker = os.path.join(project_root, "packages.repos")
+        with open(marker, "w", encoding="utf-8"):
+            pass
+        isaac_dir = os.path.join(project_root, "ros2_ws")
+        os.makedirs(isaac_dir)
+        return isaac_dir
+
+    def test_project_root_is_mounted_once(self):
+        with TemporaryDirectory() as tmpdir:
+            isaac_dir = self._make_workspace(tmpdir)
+
+            mounts = self.run_dev.get_workspace_mount_args(isaac_dir)
+
+        project_root = os.path.realpath(tmpdir)
+        self.assertEqual(mounts, [f"-v {project_root}:/workspaces"])
+        self.assertFalse(os.path.exists(os.path.join(tmpdir, "scripts")))
+
+    def test_project_root_mount_quotes_spaces(self):
+        with TemporaryDirectory() as tmpdir:
+            project_root = os.path.join(tmpdir, "JetPilot Project's Files")
+            isaac_dir = self._make_workspace(project_root)
+
+            mounts = self.run_dev.get_workspace_mount_args(isaac_dir)
+
+        project_root = os.path.realpath(project_root)
+        self.assertEqual(
+            mounts,
+            [f"-v {self.run_dev.shlex.quote(project_root)}:/workspaces"],
+        )
+        self.assertEqual(
+            self.run_dev.shlex.split(mounts[0]),
+            ["-v", f"{project_root}:/workspaces"],
+        )
+
+    def test_project_root_requires_jetpilot_marker(self):
         with TemporaryDirectory() as tmpdir:
             isaac_dir = os.path.join(tmpdir, "ros2_ws")
             os.makedirs(isaac_dir)
 
-            mounts = self.run_dev.get_workspace_mount_args(isaac_dir)
+            with self.assertRaisesRegex(ValueError, "packages.repos"):
+                self.run_dev.get_workspace_mount_args(isaac_dir)
 
-        self.assertIn(
-            f"-v {os.path.join(tmpdir, 'scripts')}:/workspaces/scripts",
-            mounts,
-        )
-        self.assertIn(
-            f"-v {os.path.join(tmpdir, 'tools')}:/workspaces/tools",
-            mounts,
-        )
-        self.assertFalse(any("/debug" in mount for mount in mounts))
+    def test_filesystem_root_is_never_used_as_project_root(self):
+        with self.assertRaisesRegex(ValueError, "packages.repos"):
+            self.run_dev.get_workspace_mount_args("/ros2_ws")
 
     def test_container_workspace_path_uses_host_workspace_name(self):
         self.assertEqual(
             self.run_dev.get_container_workspace_path("/opt/JetPilot/ros2_ws"),
             "/workspaces/ros2_ws",
         )
+
+    def test_container_command_has_no_redundant_workspace_submount(self):
+        args = types.SimpleNamespace(
+            platform="x86_64",
+            isaac_ros_platform="amd64",
+            verbose=False,
+        )
+        with TemporaryDirectory() as tmpdir:
+            isaac_dir = self._make_workspace(tmpdir)
+
+            with mock.patch.object(self.run_dev, "get_docker_args", return_value=[]), \
+                 mock.patch.object(self.run_dev, "load_docker_args_from_file", return_value=[]), \
+                 mock.patch.object(self.run_dev.subprocess, "run") as run_mock:
+                self.run_dev.run_docker_container(
+                    args,
+                    "jetpilot-test",
+                    "jetpilot:test",
+                    isaac_dir,
+                )
+
+        command = run_mock.call_args.args[0]
+        project_root = os.path.realpath(tmpdir)
+        self.assertIn(f"-v {project_root}:/workspaces", command)
+        self.assertNotIn(f"-v {isaac_dir}:/workspaces/ros2_ws", command)
+        for directory in ("scripts", "tools", "python_ws", "record", "map"):
+            self.assertNotIn(f":/workspaces/{directory}", command)
+        self.assertIn("--workdir /workspaces/ros2_ws", command)
 
 
 class TestRunDevBuildArgs(unittest.TestCase):

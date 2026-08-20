@@ -210,24 +210,16 @@ def get_existing_bash_configs():
 
 
 def get_workspace_mount_args(isaac_dir):
-    """Mount Isaac ROS sibling directories used by legacy run_dev.sh workflows."""
-    isaac_parent_dir = os.path.dirname(os.path.abspath(isaac_dir))
-    sibling_mounts = {
-        "scripts": "/workspaces/scripts",
-        "tools": "/workspaces/tools",
-        "python_ws": "/workspaces/python_ws",
-        "record": "/workspaces/record",
-        "map": "/workspaces/map",
-    }
-
-    docker_args = []
-    for host_name, container_path in sibling_mounts.items():
-        host_path = os.path.join(isaac_parent_dir, host_name)
-        if not os.path.isdir(host_path):
-            os.makedirs(host_path, exist_ok=True)
-            print(f"Created missing workspace support directory at {host_path}")
-        docker_args.append(f"-v {shlex.quote(host_path)}:{container_path}")
-    return docker_args
+    """Mount the JetPilot project root so every top-level directory is available."""
+    workspace_path = os.path.realpath(os.path.abspath(isaac_dir))
+    project_root = os.path.dirname(workspace_path)
+    project_marker = os.path.join(project_root, "packages.repos")
+    if project_root == os.path.sep or not os.path.isfile(project_marker):
+        raise ValueError(
+            "The Isaac ROS workspace must be directly under the JetPilot project "
+            f"root containing packages.repos: {workspace_path}"
+        )
+    return [f"-v {shlex.quote(project_root)}:/workspaces"]
 
 
 def get_container_workspace_path(isaac_dir):
@@ -394,7 +386,6 @@ def run_docker_container(args, container_name, base_name, isaac_dir):
 
     # Add remaining arguments
     docker_command_parts.extend([
-        f"-v {shlex.quote(isaac_dir)}:{shlex.quote(container_workspace_path)}",
         "-v /etc/localtime:/etc/localtime:ro",
         f"--name {shlex.quote(container_name)}",
         "--gpus all",
