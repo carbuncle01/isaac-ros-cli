@@ -1,0 +1,39 @@
+#!/bin/bash
+# Copyright (c) 2026, NVIDIA CORPORATION. All rights reserved.
+#
+# NVIDIA CORPORATION and its licensors retain all intellectual property
+# and proprietary rights in and to this software, related documentation
+# and any modifications thereto. Any use, reproduction, disclosure or
+# distribution of this software and related documentation without an express
+# license agreement from NVIDIA CORPORATION is strictly prohibited.
+
+set -e
+
+rm_conffile() {
+    local base_path="$1"
+
+    rm -f "$base_path" "$base_path".dpkg-*
+}
+
+remove_platform_apt_prefs() {
+    # Platform apt pins are activated by postinst (not shipped by dpkg), so
+    # remove them and any dpkg leftovers whenever package state changes.
+    rm_conffile /etc/apt/preferences.d/20-isaac-ros-dgx-spark.pref
+    rm_conffile /etc/apt/preferences.d/20-isaac-ros-jetson.pref
+    rm_conffile /etc/apt/preferences.d/isaac-ros-dgx-spark.pref
+}
+
+case "$1" in
+    remove|purge|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+        remove_platform_apt_prefs
+        ;;
+
+    *)
+        echo "postrm called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

@@ -42,6 +42,7 @@ class ActivateCommandTests(unittest.TestCase):
                     "image": {
                         "base_image_keys": ["base"],
                         "additional_image_keys": [],
+                        "push": False,
                     },
                     "run": {
                         "container_name": "container",
@@ -155,6 +156,60 @@ class ActivateCommandTests(unittest.TestCase):
         )
         mocks["activate_venv"].assert_not_called()
         mocks["activate_baremetal"].assert_not_called()
+
+    def test_activate_uses_configured_push_default(self):
+        """Omitting --push/--no-push should defer to the resolved IRCLI config."""
+        with self._common_patches() as mocks:
+            cfg = self._cfg()
+            cfg.docker.image.push = True
+            mocks["load_environment_mode"].return_value = "docker"
+            mocks["load_config"].return_value = cfg
+            mocks["is_venv_activated"].return_value = False
+            mocks["is_baremetal_activated"].return_value = False
+            mocks["detect_platform"].return_value = Platform.AMD64
+
+            result = self.runner.invoke(activate, [])
+
+        self.assertEqual(result.exit_code, 0)
+        mocks["activate_docker"].assert_called_once_with(
+            cfg=cfg,
+            platform=Platform.AMD64,
+            build=False,
+            build_local=False,
+            push=True,
+            use_cached_build_image=False,
+            no_cache=False,
+            verbose=False,
+            build_only=False,
+            start_only=False,
+        )
+
+    def test_activate_no_push_overrides_configured_push_default(self):
+        """--no-push must force false even when internal config defaults to push."""
+        with self._common_patches() as mocks:
+            cfg = self._cfg()
+            cfg.docker.image.push = True
+            mocks["load_environment_mode"].return_value = "docker"
+            mocks["load_config"].return_value = cfg
+            mocks["is_venv_activated"].return_value = False
+            mocks["is_baremetal_activated"].return_value = False
+            mocks["detect_platform"].return_value = Platform.AMD64
+
+            result = self.runner.invoke(activate, ["--no-push"])
+
+        self.assertEqual(result.exit_code, 0)
+        mocks["activate_docker"].assert_called_once_with(
+            cfg=cfg,
+            platform=Platform.AMD64,
+            build=False,
+            build_local=False,
+            push=False,
+            use_cached_build_image=False,
+            no_cache=False,
+            verbose=False,
+            build_only=False,
+            start_only=False,
+        )
 
     def test_activate_rejects_malformed_config_override(self):
         """Invalid KEY=VALUE overrides should fail as CLI usage errors."""
@@ -366,6 +421,22 @@ class ActivateCommandTests(unittest.TestCase):
             mocks["is_baremetal_activated"].return_value = False
 
             result = self.runner.invoke(activate, ["--build"])
+
+        self.assertEqual(result.exit_code, 2)
+        mocks["load_config"].assert_not_called()
+        mocks["detect_platform"].assert_not_called()
+        mocks["activate_docker"].assert_not_called()
+        mocks["activate_venv"].assert_not_called()
+        mocks["activate_baremetal"].assert_not_called()
+
+    def test_activate_rejects_no_push_flag_in_non_docker_modes(self):
+        """--no-push is explicit Docker intent even though its value is false."""
+        with self._common_patches() as mocks:
+            mocks["load_environment_mode"].return_value = "venv"
+            mocks["is_venv_activated"].return_value = False
+            mocks["is_baremetal_activated"].return_value = False
+
+            result = self.runner.invoke(activate, ["--no-push"])
 
         self.assertEqual(result.exit_code, 2)
         mocks["load_config"].assert_not_called()

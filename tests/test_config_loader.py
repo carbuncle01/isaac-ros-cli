@@ -52,7 +52,11 @@ class ConfigLoaderTests(unittest.TestCase):
         return {
             "version": SUPPORTED_CONFIG_VERSION,
             "docker": {
-                "image": {"base_image_keys": ["base"], "additional_image_keys": []},
+                "image": {
+                    "base_image_keys": ["base"],
+                    "additional_image_keys": [],
+                    "push": False,
+                },
                 "run": {
                     "container_name": "read_only",
                     "entrypoint": "/entrypoint.sh",
@@ -118,7 +122,7 @@ class ConfigLoaderTests(unittest.TestCase):
         )
         self.assertEqual(
             shipped_config["apt"]["repository"],
-            "https://isaac.download.nvidia.com/isaac-ros/release-4.5",
+            "https://isaac.download.nvidia.com/isaac-ros/release-4",
         )
         self.assertEqual(shipped_config["apt"]["distro"], "noble")
         self.assertEqual(shipped_config["apt"]["components"], ["main"])
@@ -131,8 +135,23 @@ class ConfigLoaderTests(unittest.TestCase):
 
         self.assertEqual(len(config["image_key_order"]), 1)
         image_key_order = config["image_key_order"][0].split(".")
-        self.assertIn("jp72_orin", image_key_order)
         self.assertIn("depthai", image_key_order)
+        self.assertIn("silky_evcam", image_key_order)
+        self.assertIn("additional_setting", image_key_order)
+        self.assertIn("franka_manipulation", image_key_order)
+        self.assertNotIn("jp72_orin", image_key_order)
+
+    def test_repo_workspace_config_enables_internal_push_default(self):
+        """Keep the monorepo workspace override aligned with internal image publishing."""
+        workspace_config_path = (
+            Path(__file__).resolve().parents[3] / ".isaac-ros-cli" / "config.yaml"
+        )
+        if not workspace_config_path.exists():
+            self.skipTest("NVIDIA monorepo workspace config is not present in this checkout")
+        workspace_config = yaml.safe_load(workspace_config_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(workspace_config["version"], SUPPORTED_CONFIG_VERSION)
+        self.assertTrue(workspace_config["docker"]["image"]["push"])
 
     def test_load_config_merges_all_available_sources_in_precedence_order(self):
         """Lock down the core precedence contract across read-only, system, user, and workspace."""
@@ -149,8 +168,10 @@ class ConfigLoaderTests(unittest.TestCase):
             encoding="utf-8",
         )
         self.workspace.write_text(
-            yaml.safe_dump({"docker": {"image": {"additional_image_keys": ["zed"]}}},
-                           sort_keys=False),
+            yaml.safe_dump(
+                {"docker": {"image": {"additional_image_keys": ["zed"], "push": True}}},
+                sort_keys=False,
+            ),
             encoding="utf-8",
         )
 
@@ -162,6 +183,7 @@ class ConfigLoaderTests(unittest.TestCase):
         self.assertEqual(cfg.docker.run.platform, "x86_64")
         self.assertEqual(cfg.docker.image.base_image_keys, ["base"])
         self.assertEqual(cfg.docker.image.additional_image_keys, ["zed"])
+        self.assertTrue(cfg.docker.image.push)
 
     def test_load_config_merges_apt_overlay(self):
         """APT source config uses the same overlay semantics as the rest of the config."""
@@ -210,6 +232,7 @@ class ConfigLoaderTests(unittest.TestCase):
                     parse_config_override(
                         "docker.image.additional_image_keys=[zed, realsense]"
                     ),
+                    parse_config_override("docker.image.push=true"),
                 ]
             )
 
@@ -220,6 +243,7 @@ class ConfigLoaderTests(unittest.TestCase):
             cfg.docker.image.additional_image_keys,
             ["zed", "realsense"],
         )
+        self.assertTrue(cfg.docker.image.push)
 
     def test_load_config_rejects_unknown_command_line_override_keys(self):
         """Validate parsed command-line overrides against the same schema as config files."""

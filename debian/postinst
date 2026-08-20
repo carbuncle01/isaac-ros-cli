@@ -58,6 +58,50 @@ case "$1" in
         chown -R root:"${GROUP_NAME}" /var/lib/isaac-ros-cli/
         chmod -R g+rwX /var/lib/isaac-ros-cli/
         find /var/lib/isaac-ros-cli/ -type d -exec chmod g+s {} \;
+
+        # Activate platform-specific apt pins only on their target platform.
+        SPARK_PREF_SRC="/etc/isaac-ros-cli/docker/packaging/20-isaac-ros-dgx-spark.pref"
+        SPARK_PREF_DST="/etc/apt/preferences.d/20-isaac-ros-dgx-spark.pref"
+        JETSON_PREF_SRC="/etc/isaac-ros-cli/docker/packaging/20-isaac-ros-jetson.pref"
+        JETSON_PREF_DST="/etc/apt/preferences.d/20-isaac-ros-jetson.pref"
+        PLATFORM_PY="/usr/lib/python3/dist-packages/isaac_ros_cli/platform.py"
+        platform="${ISAAC_ROS_PLATFORM:-}"
+        if [ -z "${platform}" ] && [ -f "${PLATFORM_PY}" ]; then
+            platform="$(python3 "${PLATFORM_PY}" 2>/dev/null || true)"
+        fi
+
+        # The pin lives at a non-conffile path, so deploy it with conffile-like
+        # semantics (--force-confold): install when absent, otherwise keep an
+        # admin-modified file and leave the packaged version as .dpkg-dist.
+        activate_platform_pref() {
+            expected_platform="$1"
+            pref_src="$2"
+            pref_dst="$3"
+            platform_name="$4"
+
+            if [ "${platform}" = "${expected_platform}" ]; then
+                if [ ! -f "$pref_src" ]; then
+                    echo "Skipping ${platform_name} apt pin activation: missing source $pref_src" >&2
+                    return 0
+                fi
+                if [ ! -e "$pref_dst" ]; then
+                    install -m 0644 "$pref_src" "$pref_dst"
+                    echo "Activated ${platform_name} apt pin: $pref_dst"
+                elif ! cmp -s "$pref_src" "$pref_dst"; then
+                    install -m 0644 "$pref_src" "$pref_dst.dpkg-dist"
+                    echo "Kept modified ${platform_name} apt pin; packaged version at $pref_dst.dpkg-dist"
+                else
+                    rm -f "$pref_dst.dpkg-dist"
+                fi
+            else
+                rm -f "$pref_dst" "$pref_dst.dpkg-dist"
+            fi
+        }
+
+        activate_platform_pref \
+            "arm64-fastos" "$SPARK_PREF_SRC" "$SPARK_PREF_DST" "DGX Spark"
+        activate_platform_pref \
+            "arm64-jetpack" "$JETSON_PREF_SRC" "$JETSON_PREF_DST" "Jetson"
         ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

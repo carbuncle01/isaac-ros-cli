@@ -14,9 +14,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-# Pin DGX Spark packages to the Isaac debian repository so they are always
-# sourced from Isaac builds rather than any other configured apt repository
-# (e.g. JetPack / L4T feeds).
-Package: deepstream-tegra vpi-dev libnvvpi4
-Pin: origin isaac.download.nvidia.com
+# Finally, prefer CUDA 13.2 packages on every architecture. The numeric prefix
+# sorts this after platform-specific preferences so Jetson and DGX Spark rules
+# take precedence when they match.
+Package: cuda-* libnv*
+Pin: version 13.2.*
 Pin-Priority: 1001

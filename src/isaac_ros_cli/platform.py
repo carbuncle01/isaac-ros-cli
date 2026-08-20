@@ -62,3 +62,7 @@ def detect_platform() -> Platform:
             )
     else:
         raise RuntimeError(f"Unsupported architecture: {machine}")
+
+
+if __name__ == "__main__":
+    print(detect_platform())

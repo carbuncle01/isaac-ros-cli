@@ -1,0 +1,4 @@
+rm_conffile /etc/apt/preferences.d/isaac-ros-cuda-13-2.pref 2.4.0-1~ isaac-ros-cli
+rm_conffile /etc/isaac-ros-cli/docker/packaging/isaac-ros-cuda-13-2.pref 2.4.0-1~ isaac-ros-cli
+rm_conffile /etc/isaac-ros-cli/docker/packaging/isaac-ros-dgx-spark.pref 2.4.0-1~ isaac-ros-cli
+rm_conffile /etc/apt/preferences.d/isaac-ros-dgx-spark.pref

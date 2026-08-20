@@ -477,7 +477,8 @@ class TestBuildImageLayersMain(unittest.TestCase):
         self.assertIn('--driver-opt "annotations=janitor/ttl=6h"', create_commands[0])
         self.assertIn(
             '\'--driver-opt="nodeselector='
-            'kubernetes.io/arch=amd64,eks.amazonaws.com/nodegroup=x86-node-group-xl-v3"\'',
+            'kubernetes.io/arch=amd64,'
+            'eks.amazonaws.com/nodegroup=x86-node-group-m6i-4xlarge-v1"\'',
             create_commands[0]
         )
         self.assertIn('--driver-opt timeout=10m', create_commands[0])
@@ -502,7 +503,8 @@ class TestBuildImageLayersMain(unittest.TestCase):
         self.assertEqual(len(create_commands), 1)
         self.assertIn(
             '\'--driver-opt="nodeselector='
-            'kubernetes.io/arch=arm64,eks.amazonaws.com/nodegroup=arm-node-group-xl-v3"\'',
+            'kubernetes.io/arch=arm64,'
+            'eks.amazonaws.com/nodegroup=arm-node-group-m7g-4xlarge-v1"\'',
             create_commands[0]
         )
 

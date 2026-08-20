@@ -11,25 +11,19 @@
 ARG BASE_IMAGE=ubuntu:24.04
 FROM ${BASE_IMAGE}
 
-ARG PLATFORM
 ENV ROS_DISTRO=jazzy
 ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
 
 ARG LIBREALSENSE_SOURCE_VERSION=v2.56.3
 ARG REALSENSE_ROS_GIT_URL=https://github.com/realsenseai/realsense-ros.git
 ARG REALSENSE_ROS_VERSION=r/4.56.3
-ARG LIBREALSENSE_BUILD_TOOL_OPTIONS="--force_rsusb --no_cuda"
+ARG LIBREALSENSE_BUILD_TOOL_OPTIONS=--force_rsusb
 
 COPY scripts/build-librealsense.sh /opt/realsense/build-librealsense.sh
 COPY scripts/install-realsense-dependencies.sh /opt/realsense/install-realsense-dependencies.sh
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    apt-get update \
-    && if [ "${PLATFORM}" = "arm64" ]; then \
-        apt-get install -y cuda-toolkit-13-2; \
-    else \
-        apt-get install -y cuda-toolkit-13-0; \
-    fi
+    apt-get update && apt-get install -y cuda-toolkit
 RUN chmod +x /opt/realsense/install-realsense-dependencies.sh && \
     /opt/realsense/install-realsense-dependencies.sh
 RUN chmod +x /opt/realsense/build-librealsense.sh && /opt/realsense/build-librealsense.sh -v ${LIBREALSENSE_SOURCE_VERSION} ${LIBREALSENSE_BUILD_TOOL_OPTIONS}

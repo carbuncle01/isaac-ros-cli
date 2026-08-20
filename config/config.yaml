@@ -5,6 +5,7 @@ docker:
     base_image_keys:
       - isaac_ros
     additional_image_keys: []
+    push: false
 
   run:
     container_name: isaac_ros_dev_container
@@ -15,7 +16,7 @@ docker:
 
 apt:
   key_url: https://isaac.download.nvidia.com/isaac-ros/repos.key
-  repository: https://isaac.download.nvidia.com/isaac-ros/release-4.5
+  repository: https://isaac.download.nvidia.com/isaac-ros/release-4
   distro: noble
   components:
     - main

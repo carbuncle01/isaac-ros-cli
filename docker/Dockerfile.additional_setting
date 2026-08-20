@@ -63,30 +63,25 @@ RUN set -eux; \
     fi; \
     rm -f /tmp/jetson-stats-library-probe.patch
 
-# Ensure the Isaac ROS 4.5 Jazzy apt repository is available for the package listing below.
-ARG ISAAC_DEBIAN_COMPONENTS="main external-main"
+# Ensure the Isaac ROS 4.x Jazzy apt repository is available for the package listing below.
+ARG ISAAC_DEBIAN_KEY_URL="https://isaac.download.nvidia.com/isaac-ros/repos.key"
+ARG ISAAC_DEBIAN_REPOSITORY="https://isaac.download.nvidia.com/isaac-ros/release-4"
+ARG ISAAC_DEBIAN_DIST=""
+ARG JETPILOT_ISAAC_DEBIAN_COMPONENTS="main external-main"
 ARG ISAAC_DEBIAN_DISTRO_SUFFIX=""
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     k="/usr/share/keyrings/nvidia-isaac-ros.gpg" \
-    && curl -fsSL https://isaac.download.nvidia.com/isaac-ros/repos.key | gpg --dearmor | tee "$k" > /dev/null \
+    && curl -fsSL "${ISAAC_DEBIAN_KEY_URL}" | gpg --dearmor | tee -a "$k" > /dev/null \
     && f="/etc/apt/sources.list.d/nvidia-isaac-ros.list" \
-    && s="deb [signed-by=$k] https://isaac.download.nvidia.com/isaac-ros/release-4.5 $(lsb_release -cs)${ISAAC_DEBIAN_DISTRO_SUFFIX} ${ISAAC_DEBIAN_COMPONENTS}" \
-    && echo "$s" | tee "$f" > /dev/null \
+    && touch "$f" \
+    && d="${ISAAC_DEBIAN_DIST:-$(lsb_release -cs)}" \
+    && if [[ -n "${ISAAC_DEBIAN_DISTRO_SUFFIX}" && "${d}" != *"${ISAAC_DEBIAN_DISTRO_SUFFIX}" ]]; then \
+        d="${d}${ISAAC_DEBIAN_DISTRO_SUFFIX}"; \
+    fi \
+    && s="deb [signed-by=$k] ${ISAAC_DEBIAN_REPOSITORY} ${d} ${JETPILOT_ISAAC_DEBIAN_COMPONENTS}" \
+    && (grep -qxF "$s" "$f" || echo "$s" | tee -a "$f") \
     && apt-get update \
     && rm -rf /var/lib/apt/lists/*
-
-# JetRacer support.
-RUN set -eux; \
-    cd /tmp; \
-    git clone --depth 1 https://github.com/NVIDIA-AI-IOT/jetracer.git; \
-    cd jetracer; \
-    python3 setup.py install; \
-    python3 -m pip install --break-system-packages \
-        traitlets \
-        questionary \
-        jetson-gpio; \
-    cd /; \
-    rm -rf /tmp/jetracer
 
 # Python environment for x86_64 training and trajectory planning.
 # Activate explicitly with: source /opt/env/bin/activate
@@ -113,7 +108,6 @@ RUN set -eux; \
             matplotlib==3.11.0 \
             scipy==1.17.1 \
             quadprog==0.1.13 \
-            rosbags==0.11.3 \
             "ultralytics>=8.3,<9"; \
         /opt/env/bin/python -m pip install \
             "git+https://github.com/carbuncle01/trajectory_planning_helpers.git@master" \
@@ -149,66 +143,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         ros-jazzy-isaac-ros-visual-mapping \
         ros-jazzy-isaac-ros-visual-slam \
     && rm -rf /var/lib/apt/lists/*
-
-# Previously explicit Isaac ROS packages.
-#
-# They are intentionally not installed as feature roots. Keep this reference
-# list so a future pipeline can promote the corresponding package back into
-# the active apt list above. Packages required by the active feature roots may
-# still be installed transitively by APT.
-#
-# ros-jazzy-isaac-common
-# ros-jazzy-isaac-ros-common
-# ros-jazzy-isaac-ros-deploy
-# ros-jazzy-isaac-ros-deploy-converters
-# ros-jazzy-isaac-ros-deploy-interfaces
-# ros-jazzy-isaac-ros-deploy-ros2-control
-# ros-jazzy-isaac-ros-depth-image-proc
-# ros-jazzy-isaac-ros-gxf
-# ros-jazzy-isaac-ros-h264-decoder
-# ros-jazzy-isaac-ros-h264-encoder
-# ros-jazzy-isaac-ros-image-pipeline
-# ros-jazzy-isaac-ros-image-proc
-# ros-jazzy-isaac-ros-jetson-stats-services
-# ros-jazzy-isaac-ros-json-info-generator
-# ros-jazzy-isaac-ros-managed-nitros
-# ros-jazzy-isaac-ros-nitros
-# ros-jazzy-isaac-ros-nitros-battery-state-type
-# ros-jazzy-isaac-ros-nitros-bridge-interfaces
-# ros-jazzy-isaac-ros-nitros-bridge-ros2
-# ros-jazzy-isaac-ros-nitros-compressed-image-type
-# ros-jazzy-isaac-ros-nitros-compressed-video-type
-# ros-jazzy-isaac-ros-nitros-correlated-timestamp-type
-# ros-jazzy-isaac-ros-nitros-detection2-d-array-type
-# ros-jazzy-isaac-ros-nitros-detection3-d-array-type
-# ros-jazzy-isaac-ros-nitros-disparity-image-type
-# ros-jazzy-isaac-ros-nitros-encoder-ticks-type
-# ros-jazzy-isaac-ros-nitros-flat-scan-type
-# ros-jazzy-isaac-ros-nitros-imu-type
-# ros-jazzy-isaac-ros-nitros-occupancy-grid-type
-# ros-jazzy-isaac-ros-nitros-odometry-type
-# ros-jazzy-isaac-ros-nitros-point-cloud-type
-# ros-jazzy-isaac-ros-nitros-pose-array-type
-# ros-jazzy-isaac-ros-nitros-pose-cov-stamped-type
-# ros-jazzy-isaac-ros-nitros-std-msg-type
-# ros-jazzy-isaac-ros-nitros-topic-tools
-# ros-jazzy-isaac-ros-nitros-twist-type
-# ros-jazzy-isaac-ros-nova-interfaces
-# ros-jazzy-isaac-ros-occupancy-grid-localizer
-# ros-jazzy-isaac-ros-pointcloud-interfaces
-# ros-jazzy-isaac-ros-pointcloud-utils
-# ros-jazzy-isaac-ros-pynitros
-# ros-jazzy-isaac-ros-realsense
-# ros-jazzy-isaac-ros-rtdetr
-# ros-jazzy-isaac-ros-robots-tools
-# ros-jazzy-isaac-ros-segformer
-# ros-jazzy-isaac-ros-stereo-image-proc
-# ros-jazzy-isaac-ros-tensor-proc
-# ros-jazzy-isaac-ros-triton
-# ros-jazzy-isaac-ros-unet
-# ros-jazzy-isaac-ros-usb-cam
-# ros-jazzy-isaac-ros-visual-slam-interfaces
-# ros-jazzy-isaac-ros-vpi-utils
 
 # ROS packages.
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -296,23 +230,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         /tmp/urg_node2 \
         /tmp/ros-${ROS_DISTRO}-urg-node2_*.deb \
         /var/lib/apt/lists/*
-
-# FoundationStereo models (x86_64 only).
-# ENV FOUNDATIONSTEREO_MODEL_RES=low_res
-
-# RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-#     if [ "$(uname -m)" = "x86_64" ]; then \
-#         export ISAAC_ROS_WS=/opt/isaac_ros_model_ws; \
-#         echo "Architecture is x86_64. Installing FoundationStereo models into ${ISAAC_ROS_WS}..." && \
-#         mkdir -p "${ISAAC_ROS_WS}" && \
-#         apt-get update && apt-get install -y \
-#             ros-jazzy-isaac-ros-foundationstereo-models-install \
-#         && rm -rf /var/lib/apt/lists/* && \
-#         . /opt/ros/jazzy/setup.sh && \
-#         yes y | ros2 run isaac_ros_foundationstereo_models_install install_foundationstereo_models.sh --eula --model_res "${FOUNDATIONSTEREO_MODEL_RES}"; \
-#     else \
-#         echo "Skipping FoundationStereo model download. (Architecture is $(uname -m), not x86_64)"; \
-#     fi
 
 # RTP video experiment tools. Keep this near the end so changes here do not
 # invalidate heavier ROS and sensor build layers above.

@@ -27,6 +27,11 @@ isaac-ros activate
 # Override config keys for one invocation (see config/config.yaml for available keys)
 isaac-ros activate --config docker.run.container_name=foo
 isaac-ros activate --config docker.run.container_name=foo -c docker.run.platform=x86_64
+isaac-ros activate -c docker.image.push=true
+
+# Override the configured image push default for one invocation
+isaac-ros activate --push
+isaac-ros activate --no-push
 ```
 
 ## Rebuilding Debian Package

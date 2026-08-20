@@ -14,16 +14,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-# Block CUDA 13.1+ packages (priority -1 = never install).
-# This forces apt to select CUDA 13.0 when resolving alternative dependencies
-# like "cuda-nvcc-13-1 | cuda-nvcc-13-0".
-#
-# Pattern [1-9]* matches 13-1, 13-2, ..., 13-9, 13-10, 13-11, etc.
-Package: cuda-*-13-[1-9]* libnv*-13-[1-9]*
-Pin: version *
-Pin-Priority: -1
+# Prefer FastOS builds on DGX Spark across all Isaac repository mirrors.
+Package: deepstream-spark vpi4-dev libnvvpi4
+Pin: release n=noble-fastos
+Pin-Priority: 1001
 
-# Prefer CUDA 13.0 packages
+# Prefer CUDA 13.0 on DGX Spark. Priority 1002 ensures CUDA packages resolve
+# at 13.0 regardless of the versions available from configured repositories.
 Package: cuda-* libnv*
 Pin: version 13.0.*
-Pin-Priority: 1001
+Pin-Priority: 1002

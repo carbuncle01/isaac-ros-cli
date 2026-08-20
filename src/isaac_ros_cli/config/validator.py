@@ -40,6 +40,7 @@ class DockerImageConfig(_ConfigModel):
 
     base_image_keys: List[NonEmptyString]
     additional_image_keys: List[NonEmptyString]
+    push: StrictBool
 
     @validator("base_image_keys")
     def _validate_base_image_keys(cls, value: List[str]) -> List[str]:
@@ -53,6 +54,7 @@ class DockerImageConfigOverlay(_ConfigModel):
 
     base_image_keys: Optional[List[NonEmptyString]] = None
     additional_image_keys: Optional[List[NonEmptyString]] = None
+    push: Optional[StrictBool] = None
 
     @validator("base_image_keys")
     def _validate_base_image_keys(cls, value: Optional[List[str]]) -> Optional[List[str]]:

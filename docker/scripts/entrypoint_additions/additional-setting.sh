@@ -26,21 +26,6 @@ print_info "Custom network settings applied."
 
 export HOME=${USER_HOME}
 
-# JetPack 7.2 on Orin opens the DRM render node while creating a CUDA
-# context.  Mirror the device GID instead of assuming the container's render
-# group has the same numeric ID as the host.
-if [ -c /dev/dri/renderD128 ]; then
-    HOST_RENDER_GID=$(stat -c '%g' /dev/dri/renderD128)
-    EXISTING_RENDER_GROUP=$(getent group "${HOST_RENDER_GID}" | cut -d: -f1)
-    if [ -n "${EXISTING_RENDER_GROUP}" ]; then
-        usermod -aG "${EXISTING_RENDER_GROUP}" "${USER_NAME}"
-    else
-        groupadd -g "${HOST_RENDER_GID}" render_host
-        usermod -aG render_host "${USER_NAME}"
-    fi
-    print_info "Granted ${USER_NAME} access to render device GID ${HOST_RENDER_GID}."
-fi
-
 # Prefer the locally installed OpenEB/Metavision SDK. JetPilot builds OpenEB
 # with the CenturyArks SilkyEvCam plugin under /usr/local, while the ROS
 # openeb_vendor package does not include that plugin.
@@ -99,30 +84,6 @@ for SERIAL_DEVICE in /dev/ttyACM* /dev/ttyUSB*; do
         usermod -aG "${SERIAL_GROUP_NAME}" ${USER_NAME}
     fi
 done
-
-# JetRacer GPIO.
-if [ -c /dev/gpiochip0 ]; then
-    HOST_GPIO_GID=999
-    EXISTING_GPIO_GROUP=$(getent group ${HOST_GPIO_GID} | cut -d: -f1)
-    if [ -n "${EXISTING_GPIO_GROUP}" ]; then
-        usermod -aG ${EXISTING_GPIO_GROUP} ${USER_NAME}
-    else
-        groupadd -g ${HOST_GPIO_GID} gpio
-        usermod -aG gpio ${USER_NAME}
-    fi
-fi
-
-# JetRacer I2C.
-if [ -c /dev/i2c-7 ]; then
-    HOST_I2C_GID=$(stat -c '%g' /dev/i2c-7)
-    EXISTING_I2C_GROUP=$(getent group ${HOST_I2C_GID} | cut -d: -f1)
-    if [ -n "${EXISTING_I2C_GROUP}" ]; then
-        usermod -aG ${EXISTING_I2C_GROUP} ${USER_NAME}
-    else
-        groupadd -g ${HOST_I2C_GID} i2c_host
-        usermod -aG i2c_host ${USER_NAME}
-    fi
-fi
 
 export ROS_DOMAIN_ID="${ROS_DOMAIN_ID:=0}"
 print_info "Using ROS_DOMAIN_ID=${ROS_DOMAIN_ID}"

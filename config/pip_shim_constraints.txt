@@ -143,7 +143,7 @@ importlib_metadata==8.5.0
 importlib_resources==6.5.2
 iniconfig==1.1.1
 interactive-markers==2.5.5
-isaacteleop==1.3.55rc1
+isaacteleop==1.3.131
 Jinja2==3.1.6
 jmespath==1.0.1
 joblib==1.5.2
@@ -296,6 +296,7 @@ python-magic==0.4.27
 python-qt-binding==2.2.2
 pytorch-lightning==2.6.0
 pytransform3d==3.14.3
+pyvers==0.2.2
 pytz==2025.2
 pyxdg==0.28
 PyYAML==6.0.3

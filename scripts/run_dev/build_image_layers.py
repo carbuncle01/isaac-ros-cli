@@ -657,6 +657,7 @@ class ImageBuildPlan:
             target_dict['args'] = {
                 'PLATFORM': file_arch,
                 'ISAAC_DEBIAN_DISTRO_SUFFIX': distro_suffix,
+                'ISAAC_ROS_PLATFORM': isaac_ros_platform,
             }
 
             if use_s3_cache:
@@ -1051,10 +1052,10 @@ def main(image_key_set: List[str],
                 print("Using Kubernetes driver (bypasses NLB, fixes EOF errors)")
                 if config.platform_ in ["x86_64", "amd64"]:
                     k8s_arch = "amd64"
-                    k8s_nodegroup = "x86-node-group-xl-v3"
+                    k8s_nodegroup = "x86-node-group-m6i-4xlarge-v1"
                 else:
                     k8s_arch = "arm64"
-                    k8s_nodegroup = "arm-node-group-xl-v3"
+                    k8s_nodegroup = "arm-node-group-m7g-4xlarge-v1"
                 k8s_nodeselector = (
                     f'kubernetes.io/arch={k8s_arch},'
                     f'eks.amazonaws.com/nodegroup={k8s_nodegroup}'
@@ -1236,12 +1237,19 @@ if __name__ == "__main__":
         help="Force local building instead of remote.",
         default=False
     )
-    parser.add_argument(
+    push_group = parser.add_mutually_exclusive_group()
+    push_group.add_argument(
         '--push',
         action="store_true",
         dest="push",
+        default=False,
         help="Push the image to the target registry when complete.",
-        default=False
+    )
+    push_group.add_argument(
+        '--no-push',
+        action="store_false",
+        dest="push",
+        help="Do not push the image to the target registry when complete.",
     )
     parser.add_argument(
         '--kubernetes',

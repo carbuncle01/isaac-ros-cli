@@ -17,6 +17,7 @@ import importlib
 import io
 import os
 import sys
+from tempfile import TemporaryDirectory
 import types
 import unittest
 from unittest import mock
@@ -81,6 +82,18 @@ class TestParseArgsMode(unittest.TestCase):
         args = self._parse()
         self.assertEqual(args.mode, 'run')
 
+    def test_default_push_is_false(self):
+        args = self._parse()
+        self.assertFalse(args.push)
+
+    def test_push_flag_sets_push_true(self):
+        args = self._parse(['--push'])
+        self.assertTrue(args.push)
+
+    def test_no_push_flag_sets_push_false(self):
+        args = self._parse(['--no-push'])
+        self.assertFalse(args.push)
+
     def test_mode_build(self):
         args = self._parse(['--mode', 'build'])
         self.assertEqual(args.mode, 'build')
@@ -109,6 +122,37 @@ class TestParseArgsMode(unittest.TestCase):
                 'ISAAC_DEBIAN_REPOSITORY=https://apt.example.test/isaac-ros',
                 'ISAAC_DEBIAN_COMPONENTS=main preview',
             ],
+        )
+
+
+class TestWorkspaceMounts(unittest.TestCase):
+    """Verify JetPilot sibling directories use the documented container paths."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.run_dev = _import_run_dev()
+
+    def test_workspace_support_mounts_match_documentation(self):
+        with TemporaryDirectory() as tmpdir:
+            isaac_dir = os.path.join(tmpdir, "ros2_ws")
+            os.makedirs(isaac_dir)
+
+            mounts = self.run_dev.get_workspace_mount_args(isaac_dir)
+
+        self.assertIn(
+            f"-v {os.path.join(tmpdir, 'scripts')}:/workspaces/scripts",
+            mounts,
+        )
+        self.assertIn(
+            f"-v {os.path.join(tmpdir, 'tools')}:/workspaces/tools",
+            mounts,
+        )
+        self.assertFalse(any("/debug" in mount for mount in mounts))
+
+    def test_container_workspace_path_uses_host_workspace_name(self):
+        self.assertEqual(
+            self.run_dev.get_container_workspace_path("/opt/JetPilot/ros2_ws"),
+            "/workspaces/ros2_ws",
         )
 
 

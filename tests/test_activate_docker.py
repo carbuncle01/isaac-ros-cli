@@ -31,6 +31,7 @@ def _make_cfg(apt=None):
             'image': {
                 'base_image_keys': ['noble', 'ros2_jazzy'],
                 'additional_image_keys': ['ros_eng'],
+                'push': False,
             },
             'run': {
                 'container_name': 'test_container',
@@ -61,6 +62,8 @@ class TestBuildRunDevCommand(unittest.TestCase):
         self.assertIn('--mode', cmd)
         mode_idx = cmd.index('--mode')
         self.assertEqual(cmd[mode_idx + 1], 'build')
+        self.assertIn('--no-push', cmd)
+        self.assertNotIn('--push', cmd)
 
     @mock.patch.dict(os.environ, {'ISAAC_DIR': '/ws/isaac'})
     def test_start_only_forwards_mode_start(self):

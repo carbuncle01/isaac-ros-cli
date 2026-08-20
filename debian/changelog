@@ -1,4 +1,13 @@
-isaac-ros-cli (2.4.0-1.20260725224724) noble; urgency=low
+isaac-ros-cli (2.5.0-1) noble; urgency=low
+
+  * Add configurable Docker image push defaults and `isaac-ros activate --push` and `--no-push` overrides.
+  * Improve container access to I2C, GPIO, DRM render, and GMSL frame synchronization devices.
+  * Update CUDA, TensorRT, Jetson, and DGX Spark package selection for JetPack 7.2 and Dockerless workflows.
+  * Update Isaac Teleop and pyvers pip shim constraints, rosdep mappings, and Docker image definitions for Isaac ROS 4.6.
+
+ -- Isaac ROS Maintainers <isaac-ros-maintainers@nvidia.com>  Tue, 18 Aug 2026 12:00:00 +0000
+
+isaac-ros-cli (2.4.0-1) noble; urgency=low
 
   * Add config schema validation, command-line overrides, and the `isaac-ros status` command.
   * Improve Docker activation, `run_dev` image build lifecycle handling, and BuildKit scheduling.

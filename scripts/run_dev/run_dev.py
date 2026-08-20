@@ -213,9 +213,8 @@ def get_workspace_mount_args(isaac_dir):
     """Mount Isaac ROS sibling directories used by legacy run_dev.sh workflows."""
     isaac_parent_dir = os.path.dirname(os.path.abspath(isaac_dir))
     sibling_mounts = {
-        "scripts": "/scripts",
+        "scripts": "/workspaces/scripts",
         "tools": "/workspaces/tools",
-        "debug": "/debug",
         "python_ws": "/workspaces/python_ws",
         "record": "/workspaces/record",
         "map": "/workspaces/map",
@@ -473,12 +472,19 @@ def parse_args():
         default=False,
         help="Build the image locally if it doesn't exist"
     )
-    parser.add_argument(
+    push_group = parser.add_mutually_exclusive_group()
+    push_group.add_argument(
         "--push",
         action="store_true",
-        required=False,
+        dest="push",
         default=False,
         help="Push the image to the target registry when complete"
+    )
+    push_group.add_argument(
+        "--no-push",
+        action="store_false",
+        dest="push",
+        help="Do not push the image to the target registry when complete"
     )
     parser.add_argument(
         "--container-name",

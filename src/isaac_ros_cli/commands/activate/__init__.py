@@ -33,6 +33,13 @@ def _docker_only_validator(_ctx, _param, value):
     return value
 
 
+def _docker_push_validator(_ctx, _param, value):
+    """Validate the push tri-state option against the configured environment mode."""
+    if value is not None and load_environment_mode() != "docker":
+        raise click.UsageError("This argument is only valid for the Docker environment mode.")
+    return value
+
+
 def _config_override_validator(_ctx, _param, value):
     """Validate command-line configuration overrides before activation starts."""
     try:
@@ -54,9 +61,9 @@ def _config_override_validator(_ctx, _param, value):
 @click.option('--build-local', is_flag=True,
               help='Docker only: Build the requested Docker image locally if missing.',
               callback=_docker_only_validator)
-@click.option('--push', is_flag=True,
-              help='Docker only: Push the image to the target registry when complete.',
-              callback=_docker_only_validator)
+@click.option('--push/--no-push', default=None,
+              help='Docker only: Override whether built images are pushed to the target registry.',
+              callback=_docker_push_validator)
 @click.option('--use-cached-build-image', is_flag=True,
               help='Docker only: Use cached Docker image if available.',
               callback=_docker_only_validator)
@@ -74,7 +81,7 @@ def _config_override_validator(_ctx, _param, value):
 def activate(
         build: bool,
         build_local: bool,
-        push: bool,
+        push: bool | None,
         use_cached_build_image: bool,
         no_cache: bool,
         verbose: bool,
@@ -116,12 +123,13 @@ def activate(
 
     match mode:
         case 'docker':
+            effective_push = cfg.docker.image.push if push is None else push
             activate_docker(
                 cfg=cfg,
                 platform=platform,
                 build=build,
                 build_local=build_local,
-                push=push,
+                push=effective_push,
                 use_cached_build_image=use_cached_build_image,
                 no_cache=no_cache,
                 verbose=verbose,

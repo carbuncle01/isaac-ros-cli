@@ -88,8 +88,7 @@ def _build_run_dev_command(
         cmd.append("--build")
     if build_local:
         cmd.append("--build-local")
-    if push:
-        cmd.append("--push")
+    cmd.append("--push" if push else "--no-push")
     if use_cached_build_image:
         cmd.append("--use-cached-build-image")
     if no_cache:
