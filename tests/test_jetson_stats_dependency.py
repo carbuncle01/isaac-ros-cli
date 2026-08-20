@@ -47,5 +47,33 @@ class TestJetsonStatsDependency(unittest.TestCase):
         self.assertIn('except OSError:', patch)
         self.assertIn("if vpi := load_library('nvvpi'):", patch)
 
+    def test_ros_package_is_installed_only_on_arm64(self):
+        dockerfile = DOCKERFILE.read_text(encoding='utf-8')
+
+        architecture_guard = 'if [ "$(dpkg --print-architecture)" = "arm64" ]; then'
+        package_install = 'apt-get install -y ros-jazzy-isaac-ros-jetson-stats'
+        self.assertIn(architecture_guard, dockerfile)
+        self.assertIn(package_install, dockerfile)
+        self.assertLess(
+            dockerfile.index(architecture_guard),
+            dockerfile.index(package_install),
+        )
+
+    def test_retired_isaac_ros_packages_and_duplicate_source_are_absent(self):
+        dockerfile = DOCKERFILE.read_text(encoding='utf-8')
+
+        retired_entries = (
+            'external-main',
+            'ros-jazzy-isaac-ros-nitros-camera-info-type',
+            'ros-jazzy-gxf-isaac-cuda',
+            'ros-jazzy-gxf-isaac-flatscan-localization',
+            'ros-jazzy-gxf-isaac-localization',
+            'ros-jazzy-gxf-isaac-ros-cuda',
+        )
+        for entry in retired_entries:
+            self.assertNotIn(entry, dockerfile)
+
+        self.assertNotIn('/etc/apt/sources.list.d/nvidia-isaac-ros.list', dockerfile)
+
 if __name__ == '__main__':
     unittest.main()

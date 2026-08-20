@@ -63,26 +63,6 @@ RUN set -eux; \
     fi; \
     rm -f /tmp/jetson-stats-library-probe.patch
 
-# Ensure the Isaac ROS 4.x Jazzy apt repository is available for the package listing below.
-ARG ISAAC_DEBIAN_KEY_URL="https://isaac.download.nvidia.com/isaac-ros/repos.key"
-ARG ISAAC_DEBIAN_REPOSITORY="https://isaac.download.nvidia.com/isaac-ros/release-4"
-ARG ISAAC_DEBIAN_DIST=""
-ARG JETPILOT_ISAAC_DEBIAN_COMPONENTS="main external-main"
-ARG ISAAC_DEBIAN_DISTRO_SUFFIX=""
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    k="/usr/share/keyrings/nvidia-isaac-ros.gpg" \
-    && curl -fsSL "${ISAAC_DEBIAN_KEY_URL}" | gpg --dearmor | tee -a "$k" > /dev/null \
-    && f="/etc/apt/sources.list.d/nvidia-isaac-ros.list" \
-    && touch "$f" \
-    && d="${ISAAC_DEBIAN_DIST:-$(lsb_release -cs)}" \
-    && if [[ -n "${ISAAC_DEBIAN_DISTRO_SUFFIX}" && "${d}" != *"${ISAAC_DEBIAN_DISTRO_SUFFIX}" ]]; then \
-        d="${d}${ISAAC_DEBIAN_DISTRO_SUFFIX}"; \
-    fi \
-    && s="deb [signed-by=$k] ${ISAAC_DEBIAN_REPOSITORY} ${d} ${JETPILOT_ISAAC_DEBIAN_COMPONENTS}" \
-    && (grep -qxF "$s" "$f" || echo "$s" | tee -a "$f") \
-    && apt-get update \
-    && rm -rf /var/lib/apt/lists/*
-
 # Python environment for x86_64 training and trajectory planning.
 # Activate explicitly with: source /opt/env/bin/activate
 RUN set -eux; \
@@ -124,17 +104,15 @@ RUN set -eux; \
 #
 # Feature mapping:
 # - isaac_mapping_ros / visual_mapping: offline map creation and VGL engines
-# - launch_utils / jetson_stats: JetPilot launch files and Jetson diagnostics
+# - launch_utils: JetPilot launch files
 # - dnn_image_encoder / tensor_rt: GPU image preprocessing and JetPilot E2E inference
-# - NITROS image / camera_info / tensor_list types: explicit E2E graph contracts
+# - NITROS image / tensor_list types: explicit E2E graph contracts
 # - visual_global_localization / visual_slam: localization
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y \
         ros-jazzy-isaac-mapping-ros \
         ros-jazzy-isaac-ros-dnn-image-encoder \
-        ros-jazzy-isaac-ros-jetson-stats \
         ros-jazzy-isaac-ros-launch-utils \
-        ros-jazzy-isaac-ros-nitros-camera-info-type \
         ros-jazzy-isaac-ros-nitros-image-type \
         ros-jazzy-isaac-ros-nitros-tensor-list-type \
         ros-jazzy-isaac-ros-tensor-list-interfaces \
@@ -143,6 +121,16 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         ros-jazzy-isaac-ros-visual-mapping \
         ros-jazzy-isaac-ros-visual-slam \
     && rm -rf /var/lib/apt/lists/*
+
+# isaac_ros_jetson_stats is published for Jetson arm64 only. The x86 image
+# deliberately omits it and disables the corresponding launch feature by default.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    set -eux; \
+    if [ "$(dpkg --print-architecture)" = "arm64" ]; then \
+        apt-get update; \
+        apt-get install -y ros-jazzy-isaac-ros-jetson-stats; \
+    fi; \
+    rm -rf /var/lib/apt/lists/*
 
 # ROS packages.
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -156,10 +144,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         ros-jazzy-cartographer \
         ros-jazzy-cartographer-ros \
         ros-jazzy-cartographer-rviz \
-        ros-jazzy-gxf-isaac-cuda \
-        ros-jazzy-gxf-isaac-flatscan-localization \
-        ros-jazzy-gxf-isaac-localization \
-        ros-jazzy-gxf-isaac-ros-cuda \
         ros-jazzy-image-transport-plugins \
         ros-jazzy-joy \
         ros-jazzy-rosbag2-tools \
