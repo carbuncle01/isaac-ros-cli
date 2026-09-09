@@ -88,6 +88,7 @@ RUN set -eux; \
             matplotlib==3.11.0 \
             scipy==1.17.1 \
             quadprog==0.1.13 \
+            "optuna>=4.0,<6.0" \
             "ultralytics>=8.3,<9"; \
         /opt/env/bin/python -m pip install \
             "git+https://github.com/carbuncle01/trajectory_planning_helpers.git@master" \
