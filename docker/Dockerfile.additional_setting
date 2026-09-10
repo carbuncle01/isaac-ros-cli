@@ -83,7 +83,7 @@ RUN set -eux; \
             PyYAML==6.0.2 \
             tensorboard==2.20.0 \
             onnx==1.21.0 \
-            onnxruntime==1.26.0 \
+            onnxruntime-gpu==1.27.0 \
             onnxscript==0.7.1 \
             matplotlib==3.11.0 \
             scipy==1.17.1 \
