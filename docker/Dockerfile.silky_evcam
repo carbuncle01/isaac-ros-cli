@@ -49,6 +49,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         python3-pip \
         ros-jazzy-event-camera-codecs \
         ros-jazzy-event-camera-msgs \
+        ros-jazzy-event-camera-py \
         protobuf-compiler \
     && rm -rf /var/lib/apt/lists/*
 
@@ -107,7 +108,7 @@ RUN set -eux; \
     case "${target_arch}" in \
         amd64|x86_64) \
             test -s "${METAVISION_E2V_CHECKPOINT}"; \
-            python3 -c "import torch; assert torch.version.cuda and torch.version.cuda.split('.')[0] == '13', torch.version.cuda; from metavision_core.event_io import EventsIterator; from metavision_core_ml.event_to_video.event_to_video import EventToVideo; print(f'E2V PyTorch {torch.__version__}, CUDA build {torch.version.cuda}')"; \
+            python3 -c "import event_camera_py, numpy, torch; assert int(numpy.__version__.split('.', 1)[0]) < 2, f'event_camera_py requires NumPy 1.x; found {numpy.__version__}'; assert torch.version.cuda and torch.version.cuda.split('.')[0] == '13', torch.version.cuda; from metavision_core.event_io import EventsIterator; from metavision_core_ml.event_to_video.event_to_video import EventToVideo; print(f'event_camera_py OK; E2V PyTorch {torch.__version__}, CUDA build {torch.version.cuda}')"; \
             ;; \
         arm64|aarch64) \
             echo "Skipping Python E2V validation on ${target_arch}; OpenEB/SilkyEvCam event recording remains enabled"; \
