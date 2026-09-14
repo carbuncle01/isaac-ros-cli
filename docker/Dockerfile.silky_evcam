@@ -9,8 +9,6 @@ FROM ${BASE_IMAGE}
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PATH=/usr/local/bin:${PATH}
-ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH:-}
-ENV CMAKE_PREFIX_PATH=/usr/local:${CMAKE_PREFIX_PATH:-}
 
 ARG OPENEB_GIT_URL=https://github.com/prophesee-ai/openeb.git
 ARG OPENEB_VERSION=5.2.0
@@ -108,6 +106,9 @@ RUN set -eux; \
     case "${target_arch}" in \
         amd64|x86_64) \
             test -s "${METAVISION_E2V_CHECKPOINT}"; \
+            set +u; \
+            source /opt/ros/jazzy/setup.bash; \
+            set -u; \
             python3 -c "import event_camera_py, numpy, torch; assert int(numpy.__version__.split('.', 1)[0]) < 2, f'event_camera_py requires NumPy 1.x; found {numpy.__version__}'; assert torch.version.cuda and torch.version.cuda.split('.')[0] == '13', torch.version.cuda; from metavision_core.event_io import EventsIterator; from metavision_core_ml.event_to_video.event_to_video import EventToVideo; print(f'event_camera_py OK; E2V PyTorch {torch.__version__}, CUDA build {torch.version.cuda}')"; \
             ;; \
         arm64|aarch64) \
