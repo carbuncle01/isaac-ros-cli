@@ -123,6 +123,16 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         ros-jazzy-isaac-ros-visual-slam \
     && rm -rf /var/lib/apt/lists/*
 
+# ROS Python extensions such as the OpenCV binding shipped by Ubuntu/Isaac ROS
+# are built against the NumPy 1.x ABI.  Some upstream image layers install
+# unconstrained Python packages into /usr/local and can consequently upgrade
+# the system interpreter to NumPy 2.x.  Keep that interpreter on the ABI used
+# by ROS; the independent /opt/env ML environment intentionally keeps NumPy 2.
+ARG ROS_SYSTEM_NUMPY_VERSION=1.26.4
+RUN python3 -m pip install --break-system-packages --force-reinstall --no-deps \
+        "numpy==${ROS_SYSTEM_NUMPY_VERSION}" \
+    && python3 -c "import cv2, numpy; assert numpy.__version__ == '${ROS_SYSTEM_NUMPY_VERSION}', numpy.__version__; print(f'ROS Python OpenCV OK; NumPy {numpy.__version__}; OpenCV {cv2.__version__}')"
+
 # isaac_ros_jetson_stats is published for Jetson arm64 only. The x86 image
 # deliberately omits it and disables the corresponding launch feature by default.
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
