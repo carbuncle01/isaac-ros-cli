@@ -40,3 +40,7 @@ To build a new local copy:
 ```bash
 make build
 ```
+
+## JetPilot Docker layers
+
+See [the JetPilot Docker guide](docker/README.jetpilot.md) for architecture separation, build caching, and uv-based Python environments.

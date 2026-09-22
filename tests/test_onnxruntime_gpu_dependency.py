@@ -7,14 +7,14 @@ import unittest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DOCKERFILE = REPO_ROOT / 'docker' / 'Dockerfile.additional_setting'
+REQUIREMENTS = REPO_ROOT / 'docker' / 'requirements-training-gpu-amd64.txt'
 
 
 class TestOnnxRuntimeGpuDependency(unittest.TestCase):
     """Prevent the CPU-only wheel from replacing the CUDA provider."""
 
     def test_gpu_wheel_is_pinned_and_cpu_wheel_is_absent(self):
-        source = DOCKERFILE.read_text(encoding='utf-8')
+        source = REQUIREMENTS.read_text(encoding='utf-8')
 
         self.assertIn('onnxruntime-gpu==1.27.0', source)
         self.assertNotIn('onnxruntime==', source)

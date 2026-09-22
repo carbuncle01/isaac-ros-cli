@@ -1,0 +1,5 @@
+# Stable GPU stack; update separately from training utilities.
+torch==2.11.0
+torchvision==0.26.0
+numpy==2.4.6
+onnxruntime-gpu==1.27.0

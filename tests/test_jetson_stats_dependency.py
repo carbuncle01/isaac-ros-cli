@@ -51,7 +51,7 @@ class TestJetsonStatsDependency(unittest.TestCase):
         dockerfile = DOCKERFILE.read_text(encoding='utf-8')
 
         architecture_guard = 'if [ "$(dpkg --print-architecture)" = "arm64" ]; then'
-        package_install = 'apt-get install -y ros-jazzy-isaac-ros-jetson-stats'
+        package_install = 'apt-get install -y --no-install-recommends ros-jazzy-isaac-ros-jetson-stats'
         self.assertIn(architecture_guard, dockerfile)
         self.assertIn(package_install, dockerfile)
         self.assertLess(
