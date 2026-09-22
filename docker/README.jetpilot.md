@@ -59,7 +59,16 @@ ROS 側は NumPy 1.26.4、学習環境は NumPy 2.4.6 に分離する。
 既存の pip / rosdep / colcon は削除せず、ROS 環境全体への `uv sync` は行わない。
 変更対象以外の NVIDIA・センサー Dockerfile の pip 処理は今回の移行対象外。
 
-既存の依存バージョンは維持している。requirements は完全なロックファイルではなく、間接依存や `optuna` / `ultralytics` の範囲指定は変動し得る。
+既存の依存バージョンは維持している。requirements は親プロジェクトの uv.lock から生成し、間接依存も固定する。
 `TRAJECTORY_HELPERS_REF` の既定値も従来の `master` を維持する。厳密に再現する運用ではコミット SHA を指定し、対象 Linux/GPU 環境で解決・検証したロックへ移行する。
 
 参考: [uv 公式 Docker ガイド](https://docs.astral.sh/uv/guides/integration/docker/)
+
+## 親プロジェクトの lock との連携
+
+Python 依存の正本は JetPilot の `python_ws/environments/{training,calibration}/pyproject.toml` と `uv.lock`。
+**uv.lock は親プロジェクトで Git 管理する。** このディレクトリの requirements は
+親側の `scripts/python_env.sh export training` / `export calibration` で生成し、CLI リポジトリでもコミットする。
+Docker は間接依存まで固定された生成ファイルとハッシュを検証する。requirements は手編集しない。
+
+GUI は `INSTALL_GUI=auto|true|false` で CPU とは独立に指定できる。auto は amd64 のみ、true は Jetson にも追加する。

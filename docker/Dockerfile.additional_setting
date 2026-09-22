@@ -202,11 +202,11 @@ FROM runtime AS training-amd64
 COPY requirements-training-gpu-amd64.txt /tmp/requirements-training-gpu-amd64.txt
 RUN --mount=type=cache,target=/root/.cache/uv,sharing=locked \
     uv venv --python /usr/bin/python3 /opt/env \
-    && uv pip install --python /opt/env/bin/python \
+    && uv pip install --require-hashes --python /opt/env/bin/python \
         -r /tmp/requirements-training-gpu-amd64.txt
 COPY requirements-training-amd64.txt /tmp/requirements-training-amd64.txt
 RUN --mount=type=cache,target=/root/.cache/uv,sharing=locked \
-    uv pip install --python /opt/env/bin/python \
+    uv pip install --require-hashes --python /opt/env/bin/python \
         -c /tmp/requirements-training-gpu-amd64.txt \
         -r /tmp/requirements-training-amd64.txt
 # Override with an immutable commit for fully reproducible training builds.
@@ -260,9 +260,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
         ros-jazzy-isaac-ros-visual-mapping \
         ros-jazzy-isaac-mapping-ros \
-        ros-jazzy-cartographer-rviz \
-        ros-jazzy-rqt-tf-tree \
-        terminator \
     && rm -rf /var/lib/apt/lists/*
 
 # Offline RGB/EVS calibration and LED synchronization environment. Keep this
@@ -275,7 +272,7 @@ RUN --mount=type=cache,target=/root/.cache/uv,sharing=locked \
     set -eux; \
     uv venv --python /usr/bin/python3 --system-site-packages \
         /opt/multi_sensor_calibration_env; \
-    uv pip install --python /opt/multi_sensor_calibration_env/bin/python \
+    uv pip install --require-hashes --python /opt/multi_sensor_calibration_env/bin/python \
         -r /tmp/requirements-multi-sensor-calibration.txt; \
     /opt/multi_sensor_calibration_env/bin/python -c \
         "import cv2, numpy, rosbags, yaml; assert numpy.__version__ == '1.26.4', numpy.__version__; print(f'multi_sensor_calibration env OK; NumPy {numpy.__version__}; OpenCV {cv2.__version__}')"; \
@@ -286,6 +283,17 @@ ENV MULTI_SENSOR_CALIBRATION_VENV=/opt/multi_sensor_calibration_env
 COPY --from=training-amd64 /opt/env /opt/env
 
 FROM runtime-${PLATFORM} AS final
+# Desktop tooling is a capability, independent of the CPU architecture.
+# auto: amd64 only; true: also useful for Jetson with a local display.
+ARG INSTALL_GUI=auto
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    set -eu; \
+    case "${INSTALL_GUI}" in auto|true|false) ;; *) exit 1 ;; esac; \
+    if [ "${INSTALL_GUI}" = true ] || { [ "${INSTALL_GUI}" = auto ] && [ "$(dpkg --print-architecture)" = amd64 ]; }; then \
+        apt-get update; \
+        apt-get install -y --no-install-recommends ros-jazzy-cartographer-rviz ros-jazzy-rqt-tf-tree terminator; \
+    fi; \
+    rm -rf /var/lib/apt/lists/*
 # Copy lightweight runtime configuration last so edits to these files only
 # invalidate the final Docker layers.
 COPY middleware_profiles/cyclonedds.xml /etc/cyclonedds.xml

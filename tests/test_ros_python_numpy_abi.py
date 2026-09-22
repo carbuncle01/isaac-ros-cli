@@ -29,7 +29,7 @@ class TestRosPythonNumpyAbi(unittest.TestCase):
     def test_ml_numpy_remains_inside_opt_env(self):
         source = DOCKERFILE.read_text(encoding='utf-8')
 
-        self.assertIn('uv pip install --python /opt/env/bin/python', source)
+        self.assertIn('uv pip install --require-hashes --python /opt/env/bin/python', source)
         source = (REPO_ROOT / 'docker' / 'requirements-training-amd64.txt').read_text()
         self.assertIn('numpy==2.4.6', source)
 

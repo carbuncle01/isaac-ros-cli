@@ -38,8 +38,7 @@ class TestDockerArchitecturePolicy(unittest.TestCase):
     def test_jetson_has_no_training_calibration_gui_or_packaging_tools(self):
         source = selected_runtime(DOCKER / 'Dockerfile.additional_setting', 'arm64')
         for forbidden in ('/opt/env', 'requirements-training',
-                          'multi_sensor_calibration_env', 'terminator',
-                          'cartographer-rviz', 'rqt-tf-tree', 'python3-bloom',
+                          'multi_sensor_calibration_env', 'python3-bloom',
                           'devscripts', 'ros-jazzy-isaac-mapping-ros',
                           'ros-jazzy-isaac-ros-visual-mapping'):
             with self.subTest(forbidden=forbidden):
@@ -66,6 +65,18 @@ class TestDockerArchitecturePolicy(unittest.TestCase):
         self.assertIn('cmake --install', arm)
         self.assertIn('"torch==${E2V_TORCH_VERSION}"', x86)
         self.assertIn('/opt/event_camera_env', x86)
+
+    def test_gui_can_be_selected_independently_of_architecture(self):
+        command = next(line for line in instructions(DOCKER / 'Dockerfile.additional_setting')
+                       if line.startswith('RUN ') and 'INSTALL_GUI' in line)
+        command = re.sub(r'^(?:--mount=\S+\s+)+', '', command[4:])
+        for arch, option, expected in [('arm64', 'auto', False), ('amd64', 'auto', True),
+                                       ('arm64', 'true', True), ('amd64', 'false', False)]:
+            with self.subTest(arch=arch, option=option):
+                stubs = f'INSTALL_GUI={option}; dpkg() {{ echo {arch}; }}; apt-get() {{ echo "$@"; }}; rm() {{ :; }}; '
+                result = subprocess.run(['bash', '-c', stubs + command], text=True, capture_output=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual('terminator' in result.stdout, expected)
 
     def test_local_copy_inputs_resolve_from_cli_docker_context(self):
         for name in ('additional_setting', 'silky_evcam'):
