@@ -22,8 +22,10 @@ ARG LIBREALSENSE_BUILD_TOOL_OPTIONS="--force_rsusb --no_cuda"
 COPY scripts/build-librealsense.sh /opt/realsense/build-librealsense.sh
 COPY scripts/install-realsense-dependencies.sh /opt/realsense/install-realsense-dependencies.sh
 
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    apt-get update && apt-get install -y cuda-toolkit
+# The noble base already provides the CUDA development environment on both
+# architectures. Reuse it here; librealsense defaults to --no_cuda.
+# RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+#     apt-get update && apt-get install -y cuda-toolkit
 RUN chmod +x /opt/realsense/install-realsense-dependencies.sh && \
     /opt/realsense/install-realsense-dependencies.sh
 RUN chmod +x /opt/realsense/build-librealsense.sh && /opt/realsense/build-librealsense.sh -v ${LIBREALSENSE_SOURCE_VERSION} ${LIBREALSENSE_BUILD_TOOL_OPTIONS}
