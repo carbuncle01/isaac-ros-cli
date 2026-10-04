@@ -205,12 +205,23 @@ def make_docker_image_available(base_name, cached_image_name):
 
 def get_existing_bash_configs():
     """Returns a list of existing bash configuration files in the user's home directory."""
-    config_files = ['.bashrc', '.bash_profile', '.profile', '.dircolors']
+    config_files = ['.dircolors']
     existing_configs = []
     for file in config_files:
         if os.path.isfile(os.path.expanduser(f'~/{file}')):
             existing_configs.append(file)
     return existing_configs
+
+
+def get_workspace_mount_args(isaac_dir):
+    """Expose the kart project once, preserving its sibling workspaces."""
+    workspace = os.path.realpath(isaac_dir)
+    project = os.path.dirname(workspace)
+    if (os.path.basename(workspace) != "ros2_ws"
+            or not os.path.isdir(workspace)
+            or not os.path.isfile(os.path.join(project, "packages.repos"))):
+        raise ValueError("ISAAC_ROS_WS must be <kart project>/ros2_ws beside packages.repos")
+    return [f"-v {shlex.quote(project)}:/workspaces"]
 
 
 def get_docker_args(platform):
@@ -231,7 +242,8 @@ def get_docker_args(platform):
         "-e NVIDIA_DRIVER_CAPABILITIES=all",
         "-e ROS_DOMAIN_ID",
         "-e USER",
-        "-e ISAAC_ROS_WS=/workspaces/isaac_ros-dev",
+        "-e ISAAC_ROS_WS=/workspaces/ros2_ws",
+        "-e ISAAC_DIR=/workspaces/ros2_ws",
         f"-e HOST_USER_UID={os.getuid()}",
         f"-e HOST_USER_GID={os.getgid()}",
     ])
@@ -333,6 +345,8 @@ def load_docker_args_from_file():
             with open(docker_args_filepath, "r") as f:
                 for line in f:
                     line = line.strip()
+                    if not line or line.startswith("#"):
+                        continue
                     # Handle arguments wrapped in quotes for backward compatibility
                     if ((line.startswith('"') and line.endswith('"')) or
                             (line.startswith("'") and line.endswith("'"))):
@@ -356,7 +370,9 @@ def load_docker_args_from_file():
 
 
 def run_docker_container(args, container_name, base_name, isaac_dir):
+    workspace_mounts = get_workspace_mount_args(isaac_dir)
     docker_args = get_docker_args(args.platform)
+    docker_args.extend(workspace_mounts)
     file_args = load_docker_args_from_file()
 
     docker_args.extend(file_args)
@@ -371,7 +387,7 @@ def run_docker_container(args, container_name, base_name, isaac_dir):
         "-e TERM=xterm-256color",
         "-e COLORTERM=truecolor",
         "-e FORCE_COLOR=true",
-        "--workdir /workspaces/isaac_ros-dev",
+        "--workdir /workspaces/ros2_ws",
     ]
 
     # Pass ISAAC_ROS_PLATFORM if specified
@@ -385,7 +401,6 @@ def run_docker_container(args, container_name, base_name, isaac_dir):
 
     # Add remaining arguments
     docker_command_parts.extend([
-        f"-v {shlex.quote(isaac_dir)}:/workspaces/isaac_ros-dev",
         "-v /etc/localtime:/etc/localtime:ro",
         f"--name {shlex.quote(container_name)}",
     ])

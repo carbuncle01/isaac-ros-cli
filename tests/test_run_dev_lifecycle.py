@@ -390,6 +390,7 @@ class TestGpuDockerArgs(unittest.TestCase):
             verbose=False,
         )
         with (
+            mock.patch.object(self.run_dev, 'get_workspace_mount_args', return_value=[]),
             mock.patch.object(self.run_dev, 'get_docker_args', return_value=[]),
             mock.patch.object(self.run_dev, 'load_docker_args_from_file', return_value=[]),
             mock.patch.object(

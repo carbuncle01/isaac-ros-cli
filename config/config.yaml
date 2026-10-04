@@ -8,9 +8,9 @@ docker:
     push: false
 
   run:
-    container_name: isaac_ros_dev_container
+    container_name: kart_dev
     entrypoint: /usr/local/bin/scripts/workspace-entrypoint.sh
-    workdir: "/workspaces/isaac_ros-dev"
+    workdir: "/workspaces/ros2_ws"
     platform: auto
     use_cached_build_image: false
 

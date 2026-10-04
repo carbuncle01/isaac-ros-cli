@@ -128,15 +128,13 @@ class ConfigLoaderTests(unittest.TestCase):
         self.assertEqual(shipped_config["apt"]["components"], ["main"])
         self.assertNotIn("snapshot", shipped_config["apt"])
 
-    def test_repo_workspace_config_enables_internal_push_default(self):
-        """Keep the monorepo workspace override aligned with internal image publishing."""
-        workspace_config_path = (
-            Path(__file__).resolve().parents[3] / ".isaac-ros-cli" / "config.yaml"
-        )
-        workspace_config = yaml.safe_load(workspace_config_path.read_text(encoding="utf-8"))
-
-        self.assertEqual(workspace_config["version"], SUPPORTED_CONFIG_VERSION)
-        self.assertTrue(workspace_config["docker"]["image"]["push"])
+    def test_kart_packaged_defaults(self):
+        """Standalone fork must not depend on NVIDIA internal monorepo config."""
+        path = Path(__file__).resolve().parents[1] / "config" / "config.yaml"
+        config = yaml.safe_load(path.read_text(encoding="utf-8"))
+        self.assertFalse(config["docker"]["image"]["push"])
+        self.assertEqual(config["docker"]["run"]["container_name"], "kart_dev")
+        self.assertEqual(config["docker"]["run"]["workdir"], "/workspaces/ros2_ws")
 
     def test_load_config_merges_all_available_sources_in_precedence_order(self):
         """Lock down the core precedence contract across read-only, system, user, and workspace."""

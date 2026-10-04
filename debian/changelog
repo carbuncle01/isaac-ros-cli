@@ -1,3 +1,11 @@
+isaac-ros-cli (2.6.0-1+kart1) noble; urgency=low
+
+  * Mount the kart project once at /workspaces with ros2_ws as the workspace.
+  * Keep host shell profiles and credentials out of automatic mounts.
+  * Support comments in extra Docker arguments.
+
+ -- kart maintainers <kart@localhost>  Sun, 04 Oct 2026 22:00:00 +0900
+
 isaac-ros-cli (2.6.0-1) noble; urgency=low
 
   * Build Isaac ROS container images on ROS 2 Lyrical.
